@@ -3,54 +3,55 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.ZoneOffset
 
-def iqPublicAppIdProvider = providers.gradleProperty("iqPublicAppId")
-def iqVersionProvider = providers.gradleProperty("iqSbomVersion").orElse(project.version.toString())
-
 tasks.register("generateSbomForNexusIq") {
     group = "verification"
-    description = "Generates CycloneDX SBOM into build/libs using Sonatype-recognized filename."
+    description = "Generates CycloneDX SBOM into build/libs using Sonatype-recognized filename pattern."
 
     doLast {
-        def iqPublicAppId = iqPublicAppIdProvider.orNull
-        if (!iqPublicAppId) {
-            throw new GradleException("Missing -PiqPublicAppId=<NexusIQ Public App ID> (example: EnterpriseDPFraudCaseDataAPI)")
-        }
 
-        def ts = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
-        def sbomName = "${iqPublicAppId}_${iqVersionProvider.get()}_${ts}.cdx.json"   // ✅ Sonatype-recognized
-        def outFile = file("$buildDir/libs/${sbomName}")
+        def publicAppId = "EnterpriseDPFraudCaseDataAPI"   // ✅ hardcoded because Jenkins already uses it
+        def versionValue = project.version.toString()
+        def timestamp = ZonedDateTime.now(ZoneOffset.UTC)
+                .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+
+        def fileName = "${publicAppId}_${versionValue}_${timestamp}.cdx.json"
+        def outFile = file("$buildDir/libs/${fileName}")
         outFile.parentFile.mkdirs()
 
         def components = configurations.runtimeClasspath.resolvedConfiguration
-            .resolvedArtifacts
-            .collect { a ->
-                def id = a.moduleVersion.id
-                [
-                    "bom-ref": "pkg:maven/${id.group}/${id.name}@${id.version}",
-                    type     : "library",
-                    group    : id.group,
-                    name     : id.name,
-                    version  : id.version,
-                    purl     : "pkg:maven/${id.group}/${id.name}@${id.version}"
-                ]
-            }
+                .resolvedArtifacts
+                .collect { a ->
+                    def id = a.moduleVersion.id
+                    [
+                        "bom-ref": "pkg:maven/${id.group}/${id.name}@${id.version}",
+                        type     : "library",
+                        group    : id.group,
+                        name     : id.name,
+                        version  : id.version,
+                        purl     : "pkg:maven/${id.group}/${id.name}@${id.version}"
+                    ]
+                }
 
         def sbom = [
             bomFormat   : "CycloneDX",
             specVersion : "1.4",
             version     : 1,
             metadata    : [
-                component: [ type: "application", name: project.name, version: iqVersionProvider.get() ]
+                component: [
+                    type   : "application",
+                    name   : project.name,
+                    version: versionValue
+                ]
             ],
             components  : components
         ]
 
         outFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(sbom))
+
         println "Generated NexusIQ SBOM: ${outFile} (${components.size()} components)"
     }
 }
 
-// Make sure Jenkins "gradle build" produces the SBOM in build/libs before the IQ scan happens
 tasks.named("build") {
     finalizedBy("generateSbomForNexusIq")
 }
