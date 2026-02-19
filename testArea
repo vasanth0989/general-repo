@@ -1,6 +1,8 @@
-task generateSbom(dependsOn: build) {
-    description = 'Generates CycloneDX SBOM from resolved runtime dependencies'
-    group = 'verification'
+import groovy.json.JsonOutput
+
+tasks.register("generateBomForNexusIq") {
+    group = "verification"
+    description = "Generates CycloneDX SBOM (bom.json) into build/libs for NexusIQ Jenkins scan."
 
     doLast {
         def components = configurations.runtimeClasspath.resolvedConfiguration
@@ -8,31 +10,33 @@ task generateSbom(dependsOn: build) {
             .collect { artifact ->
                 def id = artifact.moduleVersion.id
                 [
-                    type   : "library",
-                    group  : id.group,
-                    name   : id.name,
-                    version: id.version,
-                    purl   : "pkg:maven/${id.group}/${id.name}@${id.version}",
-                    "bom-ref": "${id.group}:${id.name}:${id.version}"
+                    "bom-ref": "pkg:maven/${id.group}/${id.name}@${id.version}",
+                    type     : "library",
+                    group    : id.group,
+                    name     : id.name,
+                    version  : id.version,
+                    purl     : "pkg:maven/${id.group}/${id.name}@${id.version}"
                 ]
             }
 
         def sbom = [
-            bomFormat    : "CycloneDX",
-            specVersion  : "1.4",
-            serialNumber : "urn:uuid:${UUID.randomUUID()}",
-            version      : 1,
-            components   : components
+            bomFormat   : "CycloneDX",
+            specVersion : "1.4",
+            version     : 1,
+            metadata    : [
+                component: [
+                    type   : "application",
+                    name   : project.name,
+                    version: project.version.toString()
+                ]
+            ],
+            components  : components
         ]
 
-        def reportsDir = new File("${buildDir}/reports")
-        reportsDir.mkdirs()
+        def bomFile = file("$buildDir/libs/bom.json")   // ✅ IMPORTANT: Sonatype-recognized name
+        bomFile.parentFile.mkdirs()
+        bomFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(sbom))
 
-        def bomFile = new File("${buildDir}/reports/bom.json")
-        bomFile.text = groovy.json.JsonOutput.prettyPrint(
-            groovy.json.JsonOutput.toJson(sbom)
-        )
-
-        println "SBOM generated at ${bomFile.path} with ${components.size()} components"
+        println "NexusIQ SBOM generated at: ${bomFile} (${components.size()} components)"
     }
 }
