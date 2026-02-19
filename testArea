@@ -1,0 +1,38 @@
+task generateSbom(dependsOn: build) {
+    description = 'Generates CycloneDX SBOM from resolved runtime dependencies'
+    group = 'verification'
+
+    doLast {
+        def components = configurations.runtimeClasspath.resolvedConfiguration
+            .resolvedArtifacts
+            .collect { artifact ->
+                def id = artifact.moduleVersion.id
+                [
+                    type   : "library",
+                    group  : id.group,
+                    name   : id.name,
+                    version: id.version,
+                    purl   : "pkg:maven/${id.group}/${id.name}@${id.version}",
+                    "bom-ref": "${id.group}:${id.name}:${id.version}"
+                ]
+            }
+
+        def sbom = [
+            bomFormat    : "CycloneDX",
+            specVersion  : "1.4",
+            serialNumber : "urn:uuid:${UUID.randomUUID()}",
+            version      : 1,
+            components   : components
+        ]
+
+        def reportsDir = new File("${buildDir}/reports")
+        reportsDir.mkdirs()
+
+        def bomFile = new File("${buildDir}/reports/bom.json")
+        bomFile.text = groovy.json.JsonOutput.prettyPrint(
+            groovy.json.JsonOutput.toJson(sbom)
+        )
+
+        println "SBOM generated at ${bomFile.path} with ${components.size()} components"
+    }
+}
