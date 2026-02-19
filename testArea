@@ -40,3 +40,8 @@ tasks.register("generateBomForNexusIq") {
         println "NexusIQ SBOM generated at: ${bomFile} (${components.size()} components)"
     }
 }
+
+
+tasks.named("build") {
+    finalizedBy("generateBomForNexusIq")
+}
