@@ -1,36 +1,42 @@
 import groovy.json.JsonOutput
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.time.ZoneOffset
+import java.security.MessageDigest
+
+static String hashHex(File f, String alg) {
+    MessageDigest md = MessageDigest.getInstance(alg)
+    f.withInputStream { is ->
+        byte[] buf = new byte[8192]
+        int r
+        while ((r = is.read(buf)) > 0) {
+            md.update(buf, 0, r)
+        }
+    }
+    return md.digest().collect { String.format("%02x", it) }.join()
+}
 
 tasks.register("generateSbomForNexusIq") {
     group = "verification"
-    description = "Generates CycloneDX SBOM into build/libs using Sonatype-recognized filename pattern."
+    description = "Generates CycloneDX SBOM with hashes into build/libs for Nexus IQ."
 
     doLast {
+        def artifacts = configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts
 
-        def publicAppId = "EnterpriseDPFraudCaseDataAPI"   // ✅ hardcoded because Jenkins already uses it
-        def versionValue = project.version.toString()
-        def timestamp = ZonedDateTime.now(ZoneOffset.UTC)
-                .format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+        def components = artifacts.collect { a ->
+            def id = a.moduleVersion.id
+            def file = a.file
 
-        def fileName = "${publicAppId}_${versionValue}_${timestamp}.cdx.json"
-        def outFile = file("$buildDir/libs/${fileName}")
-        outFile.parentFile.mkdirs()
-
-        def components = configurations.runtimeClasspath.resolvedConfiguration
-                .resolvedArtifacts
-                .collect { a ->
-                    def id = a.moduleVersion.id
-                    [
-                        "bom-ref": "pkg:maven/${id.group}/${id.name}@${id.version}",
-                        type     : "library",
-                        group    : id.group,
-                        name     : id.name,
-                        version  : id.version,
-                        purl     : "pkg:maven/${id.group}/${id.name}@${id.version}"
-                    ]
-                }
+            [
+                "bom-ref": "pkg:maven/${id.group}/${id.name}@${id.version}",
+                type     : "library",
+                group    : id.group,
+                name     : id.name,
+                version  : id.version,
+                purl     : "pkg:maven/${id.group}/${id.name}@${id.version}",
+                hashes   : [
+                    [ alg: "SHA-1",   content: hashHex(file, "SHA-1") ],
+                    [ alg: "SHA-256", content: hashHex(file, "SHA-256") ]
+                ]
+            ]
+        }
 
         def sbom = [
             bomFormat   : "CycloneDX",
@@ -40,18 +46,17 @@ tasks.register("generateSbomForNexusIq") {
                 component: [
                     type   : "application",
                     name   : project.name,
-                    version: versionValue
+                    version: project.version.toString()
                 ]
             ],
             components  : components
         ]
 
+        // ✅ supported naming: <source>-bom.json
+        def outFile = file("$buildDir/libs/thirdparty-bom.json")
+        outFile.parentFile.mkdirs()
         outFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(sbom))
 
-        println "Generated NexusIQ SBOM: ${outFile} (${components.size()} components)"
+        println "Generated SBOM: ${outFile} (${components.size()} components)"
     }
-}
-
-tasks.named("build") {
-    finalizedBy("generateSbomForNexusIq")
 }
