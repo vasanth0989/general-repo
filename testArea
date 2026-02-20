@@ -1,62 +1,29 @@
-import groovy.json.JsonOutput
-import java.security.MessageDigest
-
-static String hashHex(File f, String alg) {
-    MessageDigest md = MessageDigest.getInstance(alg)
-    f.withInputStream { is ->
-        byte[] buf = new byte[8192]
-        int r
-        while ((r = is.read(buf)) > 0) {
-            md.update(buf, 0, r)
-        }
-    }
-    return md.digest().collect { String.format("%02x", it) }.join()
-}
-
-tasks.register("generateSbomForNexusIq") {
-    group = "verification"
-    description = "Generates CycloneDX SBOM with hashes into build/libs for Nexus IQ."
+tasks.register("cleanupNexusIqSbom") {
+    group = "build"
+    description = "Deletes SBOM from build/libs before publish so only the boot jar remains."
 
     doLast {
-        def artifacts = configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts
+        def libsDir = file("$buildDir/libs")
+        if (!libsDir.exists()) return
 
-        def components = artifacts.collect { a ->
-            def id = a.moduleVersion.id
-            def file = a.file
-
-            [
-                "bom-ref": "pkg:maven/${id.group}/${id.name}@${id.version}",
-                type     : "library",
-                group    : id.group,
-                name     : id.name,
-                version  : id.version,
-                purl     : "pkg:maven/${id.group}/${id.name}@${id.version}",
-                hashes   : [
-                    [ alg: "SHA-1",   content: hashHex(file, "SHA-1") ],
-                    [ alg: "SHA-256", content: hashHex(file, "SHA-256") ]
-                ]
-            ]
-        }
-
-        def sbom = [
-            bomFormat   : "CycloneDX",
-            specVersion : "1.4",
-            version     : 1,
-            metadata    : [
-                component: [
-                    type   : "application",
-                    name   : project.name,
-                    version: project.version.toString()
-                ]
-            ],
-            components  : components
+        // delete any SBOM files you might generate
+        def patterns = [
+                ~/.*-bom\.json$/,
+                ~/.*-bom\.xml$/,
+                ~/.*\.cdx\.json$/,
+                ~/.*\.cdx\.xml$/
         ]
 
-        // ✅ supported naming: <source>-bom.json
-        def outFile = file("$buildDir/libs/thirdparty-bom.json")
-        outFile.parentFile.mkdirs()
-        outFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(sbom))
-
-        println "Generated SBOM: ${outFile} (${components.size()} components)"
+        libsDir.listFiles()?.each { f ->
+            if (patterns.any { p -> f.name ==~ p }) {
+                println "Deleting SBOM file before publish: ${f.name}"
+                f.delete()
+            }
+        }
     }
+}
+
+
+tasks.matching { it.name.toLowerCase().startsWith("publish") }.configureEach {
+    dependsOn("cleanupNexusIqSbom")
 }
