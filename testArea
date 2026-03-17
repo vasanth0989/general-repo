@@ -1,29 +1,10 @@
-tasks.register("cleanupNexusIqSbom") {
-    group = "build"
-    description = "Deletes SBOM from build/libs before publish so only the boot jar remains."
+ach.injectOpen(
+    // Single spike — this alone reproduces TaskRejectedException
+    atOnceUsers(50),
 
-    doLast {
-        def libsDir = file("$buildDir/libs")
-        if (!libsDir.exists()) return
+    // Sustained load to observe app behavior post-spike
+    constantUsersPerSec(CONSTANTUSERPERSEC_USER).during(DURATION_TIME),
 
-        // delete any SBOM files you might generate
-        def patterns = [
-                ~/.*-bom\.json$/,
-                ~/.*-bom\.xml$/,
-                ~/.*\.cdx\.json$/,
-                ~/.*\.cdx\.xml$/
-        ]
-
-        libsDir.listFiles()?.each { f ->
-            if (patterns.any { p -> f.name ==~ p }) {
-                println "Deleting SBOM file before publish: ${f.name}"
-                f.delete()
-            }
-        }
-    }
-}
-
-
-tasks.matching { it.name.toLowerCase().startsWith("publish") }.configureEach {
-    dependsOn("cleanupNexusIqSbom")
-}
+    // Clean ramp down
+    rampUsersPerSec(TPS_USER).to(0).during(DURING_TIME)
+).protocols(httpProtocol_1)
