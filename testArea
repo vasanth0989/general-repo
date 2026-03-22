@@ -1,6 +1,26 @@
-spring:
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
-      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+@RestController
+@RequestMapping("/debug")
+public class ExecutorDebugController {
+
+    private final ThreadPoolTaskExecutor asyncExecutor;
+
+    public ExecutorDebugController(@Qualifier("asyncExecutor") ThreadPoolTaskExecutor asyncExecutor) {
+        this.asyncExecutor = asyncExecutor;
+    }
+
+    @GetMapping("/executor")
+    public Map<String, Object> executorStats() {
+        ThreadPoolExecutor tpe = asyncExecutor.getThreadPoolExecutor();
+
+        Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("corePoolSize", tpe.getCorePoolSize());
+        stats.put("maxPoolSize", tpe.getMaximumPoolSize());
+        stats.put("poolSize", tpe.getPoolSize());
+        stats.put("activeCount", tpe.getActiveCount());
+        stats.put("queueSize", tpe.getQueue().size());
+        stats.put("remainingQueueCapacity", tpe.getQueue().remainingCapacity());
+        stats.put("completedTaskCount", tpe.getCompletedTaskCount());
+        stats.put("taskCount", tpe.getTaskCount());
+        return stats;
+    }
+}
