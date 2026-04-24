@@ -1,26 +1,86 @@
-@RestController
-@RequestMapping("/debug")
-public class ExecutorDebugController {
+1) What type of work gives you energy? What types of challenges fuel your purpose?
 
-    private final ThreadPoolTaskExecutor asyncExecutor;
+I am most energized by solving complex problems, building impactful features, and improving application reliability and security. I enjoy work that requires deep analysis, end-to-end ownership, and delivering solutions that create measurable value.
 
-    public ExecutorDebugController(@Qualifier("asyncExecutor") ThreadPoolTaskExecutor asyncExecutor) {
-        this.asyncExecutor = asyncExecutor;
-    }
+I am particularly motivated by backend and batch processing challenges. I recently implemented account number detokenization for the KitenetAggregationModelBatch, ensuring secure handling of sensitive data. I also resolved a long-standing risk by removing temporary tables containing high-risk data, strengthening the application’s security posture.
 
-    @GetMapping("/executor")
-    public Map<String, Object> executorStats() {
-        ThreadPoolExecutor tpe = asyncExecutor.getThreadPoolExecutor();
+Production debugging and root cause analysis are areas where I thrive. I provided analysis for unexpected customer unenrollment from Balance Plus due to data inconsistencies and used Datadog metrics to investigate MiTek API timeout issues, enabling downstream teams to optimize their configurations.
 
-        Map<String, Object> stats = new LinkedHashMap<>();
-        stats.put("corePoolSize", tpe.getCorePoolSize());
-        stats.put("maxPoolSize", tpe.getMaximumPoolSize());
-        stats.put("poolSize", tpe.getPoolSize());
-        stats.put("activeCount", tpe.getActiveCount());
-        stats.put("queueSize", tpe.getQueue().size());
-        stats.put("remainingQueueCapacity", tpe.getQueue().remainingCapacity());
-        stats.put("completedTaskCount", tpe.getCompletedTaskCount());
-        stats.put("taskCount", tpe.getTaskCount());
-        return stats;
-    }
-}
+I enjoy quickly adapting to new technologies and working across the stack. I ramped up on Python to deliver ~80% test coverage for the ClearView application within timeline, and contributed to frontend improvements in React, including implementing report download functionality.
+
+I am also driven by system performance and resilience improvements. I addressed a critical Async TaskRejectedException issue by analyzing thread pool behavior and implementing a bulkhead pattern with separate pools for ACH and Check flows, improving throughput and preventing future failures.
+
+Additionally, I take ownership of maintaining application health through proactive upgrades and compliance. I have led Spring Boot upgrades, addressed NexusIQ vulnerabilities, and resolved “unknown component” issues by implementing a custom Gradle-based solution for accurate scanning.
+
+Overall, I am driven by challenging work that combines problem-solving, system design, and continuous improvement across performance, security, and scalability.
+
+
+2) Do you have abilities, areas of expertise and/or passion points that are underutilized or unknown at Capital One that you would want to leverage?
+
+Yes, I believe there are a few areas where I can further contribute and expand my impact.
+
+I have a strong interest in system design and would like more opportunities to be involved in design discussions and solutioning. While I actively contribute to implementation, I am eager to deepen my understanding of how end-to-end systems are designed and make more meaningful contributions during the design phase.
+
+I am also interested in performance optimization and improving system efficiency. I enjoy analyzing application behavior, identifying bottlenecks, and contributing to solutions that enhance reliability and scalability. I would like to further develop these skills by getting more exposure to performance testing, monitoring, and tuning.
+
+Additionally, I have a growing interest in working with data and analytics within applications. Given that my current role involves working with APIs and backend systems, I would like to leverage and strengthen my skills in areas such as data handling, analysis, and deriving insights that can support better decision-making.
+
+I also enjoy working with new technologies and continuously learning. In previous work, I have been able to quickly ramp up on new tools and frameworks, and I would like to continue building this strength by taking on tasks that involve new tech stacks or cross-functional exposure.
+
+Finally, I am interested in contributing more to team collaboration and knowledge sharing, whether through supporting peers, documenting learnings, or participating in discussions that improve overall team efficiency.
+
+Overall, I am eager to take on opportunities that help me grow technically while contributing more broadly to the team and organization.
+
+3) What are your career aspirations for the next 12–18 months?
+
+Over the next 12–18 months, my primary focus is to strengthen my foundation as a backend engineer while expanding my impact within the organization, especially during this transition to Capital One.
+
+In the near term, I aim to deepen my expertise in building scalable and resilient microservices, with a strong focus on clean design, performance, and reliability. I want to be more actively involved in design discussions and solutioning, gradually taking on more ownership in driving features from design through delivery.
+
+I am also highly interested in expanding my skills in AWS, given Capital One’s cloud-first ecosystem. I have completed the AWS Certified Cloud Practitioner certification and have hands-on experience with services such as AWS Lambda. Over the next year, I aim to build deeper practical experience across AWS services and strengthen my ability to design and develop cloud-native solutions.
+
+Additionally, I plan to enhance my skills in observability and performance optimization by leveraging monitoring tools and metrics to proactively identify issues and improve system efficiency and reliability.
+
+Given the ongoing transition, I see this as a key opportunity to quickly ramp up on Capital One’s platforms, tools, and engineering standards, and contribute effectively to delivering high-quality, scalable solutions aligned with organizational expectations.
+
+From a growth perspective, I aim to take on increased ownership, contribute more independently, and continue progressing toward the next level by strengthening both my technical depth and my ability to contribute to team success.
+
+4) What are your career aspirations in the next 3-5+ years?
+
+Over the next 3–5+ years, my goal is to grow into a well-rounded and highly impactful software engineer with strong expertise in backend systems, cloud technologies, and scalable system design.
+
+I aspire to take on more ownership in designing and building end-to-end solutions, contributing not only to implementation but also to architecture, design decisions, and system optimization. I want to deepen my expertise in building resilient, high-performing microservices and gain strong proficiency in cloud-native development, particularly on AWS, by working with a wide range of services and patterns.
+
+As I continue to grow, I aim to become a go-to engineer within my team—someone who can be relied upon for solving complex technical problems, improving system performance, and ensuring high-quality deliverables. I also want to contribute to establishing best practices in areas such as coding standards, observability, and reliability.
+
+In addition to technical growth, I am interested in expanding my impact through collaboration and mentorship. I would like to support and guide junior team members, share knowledge, and contribute to building a strong engineering culture within the team.
+
+Longer term, I see myself progressing toward a senior engineering role where I can influence technical direction, contribute to larger initiatives, and help drive scalable, efficient solutions aligned with business goals.
+
+Overall, my aspiration is to continuously grow both technically and professionally, while making meaningful contributions to the organization’s success.
+
+5) Problem Solving – Description
+
+I would like to further strengthen my problem-solving skills, especially in complex and ambiguous scenarios. This includes improving my ability to perform deeper root cause analysis for production issues, understanding system behavior end-to-end, and identifying not just fixes but long-term, scalable solutions.
+
+I want to focus on breaking down complex problems into smaller, manageable components, evaluating trade-offs, and making data-driven decisions. Additionally, I aim to enhance my ability to proactively identify potential risks or bottlenecks before they impact the system.
+
+By developing a more structured and analytical approach to problem-solving, I can contribute more effectively to resolving critical issues, improving system reliability, and delivering higher-quality solutions.
+
+6) Hard / Job-Specific Skill – Description (AWS + Backend Focus)
+
+I would like to focus on strengthening my backend engineering and cloud (AWS) skills to align with Capital One’s cloud-first ecosystem.
+
+I have completed the AWS Certified Cloud Practitioner certification and have hands-on experience with services such as AWS Lambda. Building on this, I want to deepen my knowledge of AWS by working with additional services and patterns to design scalable, resilient, and cloud-native solutions.
+
+In parallel, I aim to enhance my backend development skills by improving my understanding of microservices design, API performance optimization, and system scalability. I also want to strengthen my skills in observability and monitoring by leveraging tools and metrics to improve system reliability and performance.
+
+Focusing on these areas will help me contribute more effectively to building robust, high-performing applications and prepare me for taking on more complex technical responsibilities.
+
+7) What do you want to do more of in your current role? For example, how do you want to improve in your current role? Or, how do you want to be challenged? Or, are there new skills you want to learn or experiences you want to have in this role to support your carrer aspirations?
+
+I would like to take on more end-to-end ownership of features, from design through delivery, to strengthen my ability to contribute beyond implementation. I am also interested in being more involved in design discussions and solutioning to better understand system-level decisions.
+
+Additionally, I want to gain more hands-on experience with AWS services and cloud-native development, and further build my skills in performance optimization and observability.
+
+Overall, I am looking for opportunities that challenge me to grow technically while contributing more effectively to the team’s success.
