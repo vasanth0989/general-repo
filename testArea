@@ -1,1 +1,23 @@
 
+Bill Pay Migration — Executive Summary (as of 08/13/2026)
+
+Background: As part of the Capital One (COF) acquisition of Discover (DFS), Bill Pay is migrating from the DFS vendor (FIS) to the COF vendor (Fiserv). The Associate Pilot (AP) wave migration is scheduled for this weekend.
+
+Dry Run Readiness — Complete
+
+Dry Run 1 (06/29 – 07/07): Completed successfully with ~45 enrolled Bill Pay profiles.
+Dry Run 2 (07/14 – 07/21): Completed successfully with 168 enrolled Bill Pay profiles.
+Suppression Changes — Delivered by DFS Team Falcons
+
+Development and testing are complete for three suppression changes supporting the migration:
+
+MD-8 Suppression (effective 08/14/2026, 5:00 PM ET)
+New Bill Pay enrollments disabled for the AP population.
+Existing AP-wave Bill Pay customers can no longer set up new eBill enrollments.
+MD-2 Suppression (effective 08/20/2026, 5:00 PM ET)
+Bill Pay access fully disabled for the AP-wave population ahead of Migration Day.
+MMA Calendar Suppression
+Customers using an MMA funding account cannot schedule bill payments dated on or after 10/08/2026 (calendar disabled beyond that date when creating or editing a payment).
+A banner and "show more" pop-up on the Make a Bill Payment page inform impacted customers of the restriction; these display only for customers with at least one MMA funding account.
+The restriction applies only to MMA funding accounts — switching to a checking funding account removes it.
+Status: All changes have been tested with sign-off from UAT, Regression, and Mobile teams. Production release is scheduled for tonight, 08/13/2026. We are on track for the weekend migration.
