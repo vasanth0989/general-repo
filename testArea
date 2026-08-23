@@ -1,23 +1,34 @@
+In the FIS Recurring Payment file, the key field used to distinguish the recurring **MODEL** from an actual payment **INSTANCE** is `Recurring/Single Payment Identifier` **(Position 573-574, Length 2)**. A blank/null value represents the recurring **MODEL**, while a populated value, typically `1`, represents an actual scheduled payment **INSTANCE** generated from that model.
 
-Bill Pay Migration — Executive Summary (as of 08/13/2026)
+The main recurring payment fields are:
 
-Background: As part of the Capital One (COF) acquisition of Discover (DFS), Bill Pay is migrating from the DFS vendor (FIS) to the COF vendor (Fiserv). The Associate Pilot (AP) wave migration is scheduled for this weekend.
+`Payment Amount` **(Position 291-302)**
+Amount of each payment.
 
-Dry Run Readiness — Complete
+`Payment Schedule Date` **(Position 303-310)**
+For the model, this is the starting/anchor date of the recurring instruction. For an instance, this is the actual scheduled processing date for that specific payment.
 
-Dry Run 1 (06/29 – 07/07): Completed successfully with ~45 enrolled Bill Pay profiles.
-Dry Run 2 (07/14 – 07/21): Completed successfully with 168 enrolled Bill Pay profiles.
-Suppression Changes — Delivered by DFS Team Falcons
+`Payment Due Date` **(Position 311-318)**
+The date the payment is intended to be due/delivered.
 
-Development and testing are complete for three suppression changes supporting the migration:
+`Payment End Date` **(Position 319-326)**
+The date through which the recurring instruction remains active.
 
-MD-8 Suppression (effective 08/14/2026, 5:00 PM ET)
-New Bill Pay enrollments disabled for the AP population.
-Existing AP-wave Bill Pay customers can no longer set up new eBill enrollments.
-MD-2 Suppression (effective 08/20/2026, 5:00 PM ET)
-Bill Pay access fully disabled for the AP-wave population ahead of Migration Day.
-MMA Calendar Suppression
-Customers using an MMA funding account cannot schedule bill payments dated on or after 10/08/2026 (calendar disabled beyond that date when creating or editing a payment).
-A banner and "show more" pop-up on the Make a Bill Payment page inform impacted customers of the restriction; these display only for customers with at least one MMA funding account.
-The restriction applies only to MMA funding accounts — switching to a checking funding account removes it.
-Status: All changes have been tested with sign-off from UAT, Regression, and Mobile teams. Production release is scheduled for tonight, 08/13/2026. We are on track for the weekend migration.
+`Payment Frequency` **(Position 327-332)**
+Defines how often the payment repeats and is mainly meaningful on the model.
+
+`Recurring/Single Payment Identifier` **(Position 573-574)**
+Blank/null = MODEL
+`1` = INSTANCE
+
+Example:
+
+`MODEL | Amount=19.99 | Schedule=20260825 | Due=20260827 | End=20261125 | Frequency=Monthly | Identifier=blank`
+
+Possible generated instances:
+
+`INSTANCE | Amount=19.99 | Schedule=20260825 | Identifier=1`
+`INSTANCE | Amount=19.99 | Schedule=20260925 | Identifier=1`
+`INSTANCE | Amount=19.99 | Schedule=20261025 | Identifier=1`
+
+An important edge case is that the extract may contain **only the MODEL and no INSTANCE records**. This does not automatically indicate an error or an inactive recurring payment. The FIS deconversion file is effectively a **snapshot of the data at the time the extract is produced**, and FIS may not have materialized every future recurring occurrence as an individual instance at that point. The recurring model itself still contains the information required to understand the intended future payments through `Schedule Date + Frequency + End Date + Amount`. As FIS processes the recurring instruction, individual instances may be generated later, while previously completed occurrences may appear in payment history instead. Therefore, the **MODEL should be treated as the source of truth for the recurring setup**, and INSTANCE records should be treated as confirmation of specific payment occurrences that had already been generated at the time of the snapshot.
