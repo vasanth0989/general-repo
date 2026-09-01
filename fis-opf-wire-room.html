@@ -1,0 +1,562 @@
+<title>The Wire Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ink: #0A1428;
+    --panel: #101E38;
+    --panel-2: #16264A;
+    --hair: #1E3157;
+    --ice: #E8EFFA;
+    --muted: #8FA3C4;
+    --dim: #5A6E93;
+    --signal: #FF6000;
+    --glow: #FFB380;
+    --ok: #34D58B;
+    --bad: #FF5C5C;
+    --disp: "Unbounded", "Arial Black", sans-serif;
+    --body: "Archivo", "Segoe UI", Arial, sans-serif;
+    --mono: "IBM Plex Mono", "Consolas", monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--ice);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--glow); }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--signal); font-weight: 600;
+  }
+  h2 {
+    font-family: var(--disp); font-weight: 700; font-size: clamp(26px, 4vw, 40px);
+    line-height: 1.15; margin: 10px 0 14px; text-wrap: balance;
+  }
+  .lede { color: var(--muted); max-width: 62ch; font-size: 18px; }
+  section { padding: 96px 0; position: relative; }
+  .hairline-top { border-top: 1px solid var(--hair); }
+
+  /* ---------- HERO ---------- */
+  .hero { min-height: 92vh; display: flex; align-items: center; position: relative; overflow: hidden; padding: 80px 0; }
+  .hero-grid-bg {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image: linear-gradient(var(--hair) 1px, transparent 1px), linear-gradient(90deg, var(--hair) 1px, transparent 1px);
+    background-size: 72px 72px; opacity: 0.22;
+    mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, black 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, black 30%, transparent 75%);
+  }
+  .hero-inner { position: relative; width: 100%; }
+  .hero .eyebrow { display: block; margin-bottom: 22px; }
+  .hero h1 {
+    font-family: var(--disp); font-weight: 900;
+    font-size: clamp(44px, 9vw, 108px); line-height: 0.98; margin: 0 0 26px;
+    letter-spacing: -0.01em;
+  }
+  .hero h1 .opf { color: var(--signal); }
+  .hero-sub { font-size: clamp(17px, 2.2vw, 22px); color: var(--muted); max-width: 56ch; margin-bottom: 44px; }
+  .hero-sub strong { color: var(--ice); font-weight: 600; }
+
+  .wireline { position: relative; height: 64px; margin: 0 0 18px; }
+  .wireline .rail {
+    position: absolute; left: 0; right: 0; top: 50%; height: 2px;
+    background: var(--hair);
+  }
+  .wireline .pulse {
+    position: absolute; top: 50%; width: 130px; height: 2px; transform: translateY(0);
+    background: linear-gradient(90deg, transparent, var(--signal) 60%, var(--glow));
+    animation: pulse-run 3.2s linear infinite;
+    border-radius: 2px;
+  }
+  .wireline .pulse::after {
+    content: ""; position: absolute; right: -5px; top: 50%; transform: translate(0,-50%);
+    width: 10px; height: 10px; border-radius: 50%; background: var(--glow);
+    box-shadow: 0 0 18px 4px rgba(255,96,0,0.65);
+  }
+  @keyframes pulse-run { from { left: -140px; } to { left: 100%; } }
+
+  .hero-file {
+    font-family: var(--mono); font-size: 14px; color: var(--dim);
+  }
+  .hero-file .fname { color: var(--glow); font-weight: 500; }
+
+  .scroll-hint {
+    position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--dim); animation: hint-bob 2.4s ease-in-out infinite;
+  }
+  @keyframes hint-bob { 0%,100% { transform: translate(-50%,0);} 50% { transform: translate(-50%,8px);} }
+
+  /* ---------- REVEAL (JS-gated: without JS everything stays visible) ---------- */
+  .js .rv { opacity: 0; transform: translateY(26px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .js .rv.in { opacity: 1; transform: none; }
+
+  /* ---------- WHAT IS OPF ---------- */
+  .cards3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 44px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--hair); border-radius: 14px;
+    padding: 26px 24px;
+  }
+  .card h3 { font-family: var(--disp); font-weight: 500; font-size: 17px; margin: 0 0 10px; line-height: 1.35; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  .card .k { font-family: var(--mono); font-size: 12px; color: var(--signal); letter-spacing: 0.14em; text-transform: uppercase; display: block; margin-bottom: 14px; font-weight: 600; }
+  .factrow { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 34px; }
+  .chip {
+    font-family: var(--mono); font-size: 12.5px; color: var(--muted);
+    border: 1px solid var(--hair); border-radius: 999px; padding: 7px 15px; background: rgba(16,30,56,0.6);
+  }
+  .chip b { color: var(--ice); font-weight: 600; }
+
+  /* ---------- JOURNEY ---------- */
+  .journey { position: relative; }
+  .journey-head { margin-bottom: 70px; }
+  .rail-wrap { position: relative; }
+  .rail-track {
+    position: absolute; left: 27px; top: 0; bottom: 0; width: 2px; background: var(--hair);
+  }
+  .rail-fill {
+    position: absolute; left: 27px; top: 0; width: 2px; height: 0;
+    background: linear-gradient(180deg, var(--glow), var(--signal));
+    box-shadow: 0 0 12px 1px rgba(255,96,0,0.45);
+  }
+  .station { position: relative; padding: 0 0 64px 84px; }
+  .station:last-child { padding-bottom: 0; }
+  .station .dot {
+    position: absolute; left: 17px; top: 4px; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--ink); border: 2px solid var(--hair);
+    transition: border-color 0.5s ease, box-shadow 0.5s ease, background 0.5s ease;
+  }
+  .station.lit .dot { border-color: var(--signal); background: #1c0e02; box-shadow: 0 0 16px 2px rgba(255,96,0,0.5); }
+  .station .dot::after {
+    content: ""; position: absolute; inset: 5px; border-radius: 50%;
+    background: var(--signal); opacity: 0; transform: scale(0.4); transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .station.lit .dot::after { opacity: 1; transform: scale(1); }
+  .station .snum {
+    font-family: var(--mono); font-size: 12px; color: var(--dim); letter-spacing: 0.2em; text-transform: uppercase;
+  }
+  .station.lit .snum { color: var(--signal); }
+  .station h3 { font-family: var(--disp); font-weight: 700; font-size: clamp(19px, 2.6vw, 26px); margin: 6px 0 10px; }
+  .station p { color: var(--muted); max-width: 62ch; margin: 0 0 10px; }
+  .station p strong { color: var(--ice); font-weight: 600; }
+  .sysline { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .sys {
+    font-family: var(--mono); font-size: 12px; padding: 5px 12px; border-radius: 6px;
+    background: var(--panel-2); border: 1px solid var(--hair); color: var(--ice);
+  }
+  .sys.hot { background: var(--signal); border-color: var(--signal); color: #fff; font-weight: 600; }
+
+  /* filename relay animation */
+  .relay {
+    margin-top: 18px; background: var(--panel); border: 1px solid var(--hair); border-radius: 12px;
+    padding: 18px 20px; max-width: 620px;
+  }
+  .relay .rl-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; }
+  .relay ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .relay li { display: flex; align-items: baseline; gap: 12px; font-family: var(--mono); font-size: 13px; }
+  .relay .hop { color: var(--dim); font-size: 11px; min-width: 108px; letter-spacing: 0.06em; }
+  .relay .fn { color: var(--glow); word-break: break-all; }
+  .relay li.final .fn { color: var(--signal); font-weight: 600; }
+
+  /* ---------- CLOCK ---------- */
+  .clock-track { position: relative; margin-top: 70px; height: 150px; }
+  .clock-line { position: absolute; left: 0; right: 0; top: 44px; height: 2px; background: var(--hair); }
+  .clock-line .day-fill { position: absolute; left: 0; top: 0; height: 100%; width: 100%; background: linear-gradient(90deg, var(--signal), var(--glow)); opacity: 0.55; transform-origin: left; transform: scaleX(0); transition: transform 1.6s cubic-bezier(.2,.7,.2,1); }
+  .clock-track.in .day-fill { transform: scaleX(1); }
+  .tmark { position: absolute; top: 0; transform: translateX(-50%); text-align: center; width: 150px; }
+  .tmark .tick { width: 2px; height: 14px; background: var(--signal); margin: 30px auto 0; }
+  .tmark .tt { font-family: var(--mono); font-weight: 600; font-size: 15px; color: var(--ice); margin-top: 10px; }
+  .tmark .td { font-size: 12px; color: var(--muted); line-height: 1.45; margin-top: 3px; }
+  .clock-note { margin-top: 26px; color: var(--dim); font-size: 14px; font-family: var(--mono); }
+
+  /* ---------- ACK / NACK ---------- */
+  .branch { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 48px; }
+  .bcard { border-radius: 14px; padding: 28px 26px; border: 1px solid var(--hair); background: var(--panel); }
+  .bcard.ok { border-color: rgba(52,213,139,0.35); }
+  .bcard.bad { border-color: rgba(255,92,92,0.35); }
+  .bcard .bt { font-family: var(--disp); font-weight: 700; font-size: 19px; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .bcard.ok .bt { color: var(--ok); }
+  .bcard.bad .bt { color: var(--bad); }
+  .bcard .sig { font-family: var(--mono); font-size: 12px; padding: 3px 10px; border-radius: 5px; }
+  .bcard.ok .sig { background: rgba(52,213,139,0.12); color: var(--ok); }
+  .bcard.bad .sig { background: rgba(255,92,92,0.12); color: var(--bad); }
+  .bcard ul { margin: 0; padding-left: 20px; color: var(--muted); font-size: 15px; display: grid; gap: 9px; }
+  .bcard li::marker { color: var(--dim); }
+  .bcard li strong { color: var(--ice); font-weight: 600; }
+  .loop-note { margin-top: 30px; font-size: 14px; color: var(--dim); font-style: italic; }
+
+  /* ---------- INBOUND ---------- */
+  .inbound-lane { position: relative; margin-top: 48px; background: var(--panel); border: 1px solid var(--hair); border-radius: 16px; padding: 34px 30px 30px; }
+  .inb-chain { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .inb {
+    font-size: 13.5px; color: var(--muted); background: var(--ink); border: 1px solid var(--hair);
+    padding: 12px 16px; border-radius: 10px; line-height: 1.4;
+  }
+  .inb b { color: var(--ice); font-weight: 600; display: block; font-size: 13.5px; }
+  .inb-arrow { color: var(--dim); font-family: var(--mono); }
+  .stamp {
+    position: absolute; top: -20px; right: 26px; transform: rotate(7deg);
+    font-family: var(--mono); font-weight: 600; font-size: 14px; letter-spacing: 0.14em;
+    color: var(--bad); border: 2px solid var(--bad); border-radius: 8px; padding: 8px 14px;
+    background: rgba(10,20,40,0.92); text-transform: uppercase;
+  }
+  .inb-foot { margin-top: 22px; color: var(--dim); font-size: 14px; }
+
+  /* ---------- WHY ---------- */
+  .why-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 44px; }
+  .why { background: var(--panel); border: 1px solid var(--hair); border-radius: 14px; padding: 24px; }
+  .why .wt { font-family: var(--disp); font-weight: 500; font-size: 16px; margin-bottom: 8px; color: var(--ice); }
+  .why p { margin: 0; color: var(--muted); font-size: 14.5px; }
+  .why.wide { grid-column: 1 / -1; background: linear-gradient(135deg, rgba(255,96,0,0.14), rgba(255,96,0,0.04)); border-color: rgba(255,96,0,0.4); }
+  .why.wide .wt { color: var(--signal); }
+  .why.wide p { color: var(--ice); font-size: 16px; }
+
+  /* ---------- GLOSSARY / FOOTER ---------- */
+  .gloss { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 40px; margin-top: 40px; }
+  .g { display: grid; grid-template-columns: 158px 1fr; gap: 14px; padding: 11px 4px; border-bottom: 1px solid var(--hair); font-size: 14px; }
+  .g dt { font-family: var(--mono); font-weight: 600; color: var(--ice); font-size: 13px; }
+  .g dd { margin: 0; color: var(--muted); }
+  footer { padding: 56px 0 72px; color: var(--dim); font-size: 13px; }
+  footer .fline { font-family: var(--mono); letter-spacing: 0.08em; }
+
+  @media (max-width: 860px) {
+    .cards3, .branch, .why-grid, .gloss { grid-template-columns: 1fr; }
+    .clock-track { height: auto; }
+    .clock-line { display: none; }
+    .tmark { position: static; transform: none; text-align: left; width: auto; display: grid; grid-template-columns: 84px 1fr; gap: 12px; align-items: baseline; margin-bottom: 14px; }
+    .tmark .tick { display: none; }
+    .tmark .tt { margin: 0; }
+    .stamp { position: static; display: inline-block; margin-bottom: 18px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wireline .pulse { animation: none; left: 30%; }
+    .scroll-hint { animation: none; }
+    .rv { transition: none; opacity: 1; transform: none; }
+    .clock-line .day-fill { transition: none; transform: scaleX(1); }
+    html { scroll-behavior: auto; }
+  }
+</style>
+
+<!-- ================= HERO ================= -->
+<div class="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="wrap hero-inner">
+    <span class="eyebrow">Money Movement · Wire Transfers · FIS OPF</span>
+    <h1>One engine.<br>Every outbound wire.<br><span class="opf">FIS OPF.</span></h1>
+    <p class="hero-sub">When money leaves the bank by wire, it passes through the <strong>Open Payments Framework</strong> — the FIS platform that validates, formats, and routes every outbound payment to Fedwire and SWIFT. This is the journey each wire takes, end to end.</p>
+    <div class="wireline"><div class="rail"></div><div class="pulse"></div></div>
+    <div class="hero-file">tracking&nbsp;·&nbsp;<span class="fname" id="ticker">DEPW21042023173216.txt</span></div>
+  </div>
+  <div class="scroll-hint">scroll to follow the wire</div>
+</div>
+
+<!-- ================= WHAT IS OPF ================= -->
+<section class="hairline-top">
+  <div class="wrap">
+    <div class="rv">
+      <span class="eyebrow">01 · The engine</span>
+      <h2>What OPF actually is</h2>
+      <p class="lede">FIS OPF is an enterprise payment-processing platform — the successor to FIS Quantum. Rather than building and certifying our own Fedwire, CHIPS, and SWIFT pipelines, we hand each approved wire to OPF and it does the industrial part.</p>
+    </div>
+    <div class="cards3">
+      <div class="card rv"><span class="k">Validate</span><h3>Every wire is checked</h3><p>Account validation, cut-off enforcement, duplicate detection, and OFAC / AML / regulatory screening — before anything moves.</p></div>
+      <div class="card rv"><span class="k">Transform</span><h3>Every format is spoken</h3><p>Fixed-length files and XML become Fedwire messages, CHIPS formats, SWIFT MT/MX — with native ISO&nbsp;20022 (pacs.008 / pacs.009) since 2022.</p></div>
+      <div class="card rv"><span class="k">Route</span><h3>Every rail is reachable</h3><p>Domestic wires ride Fedwire or CHIPS; international ride SWIFT — with correspondent settlement and fallback routing if a network is down.</p></div>
+    </div>
+    <div class="factrow rv">
+      <span class="chip"><b>Carries:</b>&nbsp;Fedwire · CHIPS · SWIFT MT &amp; MX · FX · internal</span>
+      <span class="chip"><b>Naming note:</b>&nbsp;BPM's “Quantum” step = OPF today</span>
+      <span class="chip"><b>Vendor:</b>&nbsp;FIS (Fidelity Information Services)</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= JOURNEY ================= -->
+<section class="hairline-top journey">
+  <div class="wrap">
+    <div class="journey-head rv">
+      <span class="eyebrow">02 · The journey</span>
+      <h2>Follow one wire out of the bank</h2>
+      <p class="lede">Eight stations between “send my money” and settled funds. Two humans approve every wire before it ever reaches OPF — the engine sits deliberately downstream of all judgment.</p>
+    </div>
+    <div class="rail-wrap">
+      <div class="rail-track"></div>
+      <div class="rail-fill" id="railFill"></div>
+
+      <div class="station">
+        <div class="dot"></div><span class="snum">Station 01 · Initiate</span>
+        <h3>The customer asks</h3>
+        <p>A wire request arrives through <strong>web or mobile</strong> (Wires-App), or on paper, fax, and mail handled by <strong>Atlas</strong> agents. Validation services and the <strong>EDP fraud decision engine</strong> screen the request before a case even exists.</p>
+        <div class="sysline"><span class="sys">Wires-App</span><span class="sys">Atlas</span><span class="sys">EDP Decisioning</span></div>
+      </div>
+
+      <div class="station">
+        <div class="dot"></div><span class="snum">Station 02 · Approve</span>
+        <h3>Two humans say yes</h3>
+        <p>An <strong>IBM BPM</strong> case walks the wire through validation, customer contact, a first approval, and a <strong>second approval</strong>. No wire moves on one person's judgment.</p>
+        <div class="sysline"><span class="sys">IBM BPM · Almanac Wires</span></div>
+      </div>
+
+      <div class="station">
+        <div class="dot"></div><span class="snum">Station 03 · Debit</span>
+        <h3>The money is set aside</h3>
+        <p><strong>Finacle</strong>, the core banking system, debits the customer's account — systematically through the BPM workflow, manually only for CD and full-balance wires.</p>
+        <div class="sysline"><span class="sys">Finacle core</span></div>
+      </div>
+
+      <div class="station">
+        <div class="dot"></div><span class="snum">Station 04 · Collect</span>
+        <h3>The batch gathers approved wires</h3>
+        <p>The <strong>Wires Transfer Batch</strong> — a Spring&nbsp;Batch application scheduled by <strong>AutoSys</strong> — finds every case that has cleared <strong>second approval</strong> and writes them into a fixed-length request file for BT&nbsp;Payments. Every 30 minutes in the morning; every 15 after 1&nbsp;PM.</p>
+        <div class="sysline"><span class="sys">Spring Batch</span><span class="sys">AutoSys</span></div>
+      </div>
+
+      <div class="station">
+        <div class="dot"></div><span class="snum">Station 05 · Decorate</span>
+        <h3>BT Payments dresses the file for OPF</h3>
+        <p>The file rides <strong>DFTP</strong> — our in-house enterprise file transmission — to <strong>BT&nbsp;Payments (Pep+)</strong>, the mainframe hub. Pep+ <strong>decorates the file into the exact format OPF requires</strong>, renaming it at every hop along the way.</p>
+        <p>Pep+ also cuts <strong>BCP files</strong> — pre-positioned backup copies of the payments. If OPF is ever down, we use those BCP files ourselves to process the critical wires manually through <strong>JPMorgan</strong>.</p>
+        <div class="relay">
+          <div class="rl-label">file relay · batch server → OPF</div>
+          <ol>
+            <li><span class="hop">batch server</span><span class="fn">DEPW&lt;ddmmyyyy&gt;&lt;HHMMSS&gt;.txt</span></li>
+            <li><span class="hop">DFTP</span><span class="fn">CHP0.DEPOSITS.FEDWIRE</span></li>
+            <li><span class="hop">Pep+ decorates</span><span class="fn">CHP0.ACHM320.SUNGARD.DEPOSITS</span></li>
+            <li class="final"><span class="hop">DFTP → OPF</span><span class="fn">&lt;ENV&gt;_BPM_YYYYMMDD_HHMMSS.txt</span></li>
+          </ol>
+        </div>
+        <div class="sysline"><span class="sys">DFTP</span><span class="sys">BT Payments · Pep+</span><span class="sys">BCP files → JPMorgan fallback</span></div>
+      </div>
+
+      <div class="station">
+        <div class="dot"></div><span class="snum">Station 06 · Process</span>
+        <h3>OPF takes over</h3>
+        <p>OPF validates the batch, enriches each payment — routing numbers, BICs, intermediary banks — and formats it for its rail. One bad case? The whole batch set gets a <strong>NACK</strong> and nothing moves — a deliberate safety property.</p>
+        <div class="sysline"><span class="sys hot">FIS OPF</span></div>
+      </div>
+
+      <div class="station">
+        <div class="dot"></div><span class="snum">Station 07 · Settle</span>
+        <h3>BNY Mellon carries it home</h3>
+        <p>We are not a direct Fedwire participant on this path — <strong>BNY Mellon</strong>, our correspondent bank, settles on our behalf: <strong>Fedwire</strong> for domestic dollars, <strong>SWIFT</strong> for international. FedLine Advantage exists only as a rare manual fallback.</p>
+        <div class="sysline"><span class="sys">BNY Mellon</span><span class="sys">Fedwire</span><span class="sys">SWIFT</span></div>
+      </div>
+
+      <div class="station">
+        <div class="dot"></div><span class="snum">Station 08 · Confirm</span>
+        <h3>The status comes back on its own</h3>
+        <p>OPF drops <strong>ACK files and per-wire XML</strong>; an AutoSys watcher spots them within five minutes, the response job parses every case, and BPM is updated over REST. The case confirms and closes — the customer gets a notification. No human in the loop.</p>
+        <div class="sysline"><span class="sys">opfResponseJob</span><span class="sys">BPM REST API</span><span class="sys">Morse notifications</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CLOCK ================= -->
+<section class="hairline-top">
+  <div class="wrap">
+    <div class="rv">
+      <span class="eyebrow">03 · The clock</span>
+      <h2>Wires run on a schedule</h2>
+      <p class="lede">Outbound wires are batch-driven, so the day has a rhythm — and hard edges. All times Eastern.</p>
+    </div>
+    <div class="clock-track rv" id="clockTrack">
+      <div class="clock-line"><div class="day-fill"></div></div>
+      <div class="tmark" style="left: 6%;"><div class="tick"></div><div class="tt">8:45 AM</div><div class="td">first batch leaves</div></div>
+      <div class="tmark" style="left: 30%;"><div class="tick"></div><div class="tt">1:00 PM</div><div class="td">cadence doubles — every 15 min</div></div>
+      <div class="tmark" style="left: 54%;"><div class="tick"></div><div class="tt">3:00 PM</div><div class="td">received &amp; verified by now = same-day wire</div></div>
+      <div class="tmark" style="left: 76%;"><div class="tick"></div><div class="tt">4:30 PM</div><div class="td">verbal-authorization cut-off</div></div>
+      <div class="tmark" style="left: 94%;"><div class="tick"></div><div class="tt">5:15 PM</div><div class="td">last batch of the day</div></div>
+    </div>
+    <div class="clock-note rv">// mornings: a batch every 30 minutes · afternoons: every 15 · file watchers: every 5</div>
+  </div>
+</section>
+
+<!-- ================= ACK / NACK ================= -->
+<section class="hairline-top">
+  <div class="wrap">
+    <div class="rv">
+      <span class="eyebrow">04 · The answer</span>
+      <h2>Every batch gets exactly one of two answers</h2>
+    </div>
+    <div class="branch">
+      <div class="bcard ok rv">
+        <div class="bt"><span class="sig">ACK</span> Batch accepted</div>
+        <ul>
+          <li><strong>ACK*.txt</strong> arrives with one XML per wire</li>
+          <li><strong>AckStep</strong> reads the expected transaction count</li>
+          <li><strong>WatchPSRFileStep</strong> waits until every XML lands</li>
+          <li><strong>xmlProcessStep</strong> parses each case and posts its status to BPM via REST</li>
+          <li>Files archived — cases confirm &amp; close</li>
+        </ul>
+      </div>
+      <div class="bcard bad rv">
+        <div class="bt"><span class="sig">NACK</span> Batch rejected</div>
+        <ul>
+          <li>One failing case rejects the <strong>whole batch set</strong> — a deliberate safety property</li>
+          <li>The watcher archives the NACK; nothing else processes</li>
+          <li>Cases <strong>stay open in BPM</strong> for correction and ride the next scheduled batch</li>
+          <li>Ops investigates through BPM queues — nothing is silently lost</li>
+        </ul>
+      </div>
+    </div>
+    <p class="loop-note rv">The OPF platform migration changed only this response flow — the request flow was untouched.</p>
+  </div>
+</section>
+
+<!-- ================= INBOUND ================= -->
+<section class="hairline-top">
+  <div class="wrap">
+    <div class="rv">
+      <span class="eyebrow">05 · The other direction</span>
+      <h2>Inbound wires never meet OPF</h2>
+      <p class="lede">Money arriving at the bank takes a completely different road — report files, not payment engines. The clearest proof that OPF is an outbound story.</p>
+    </div>
+    <div class="inbound-lane rv">
+      <div class="stamp">✕ No OPF in this path</div>
+      <div class="inb-chain">
+        <div class="inb"><b>Fed daily report</b>secure parsing portal → Excel</div><span class="inb-arrow">→</span>
+        <div class="inb"><b>BNY export</b>CSV · international wires</div><span class="inb-arrow">→</span>
+        <div class="inb"><b>DataHub / Beacon</b>ETL &amp; workflow staging</div><span class="inb-arrow">→</span>
+        <div class="inb"><b>ComplianceLink</b>OFAC screening</div><span class="inb-arrow">→</span>
+        <div class="inb"><b>Finacle</b>credit posted + GL “Wire In Credit”</div>
+      </div>
+      <p class="inb-foot">Quality is human-checked: the BEST team samples daily against Fed &amp; BNY reports, with evidence stored in QMS for FFIEC / OCC and SOX. Returns go out via the Finacle Wire Return Screen — Fedwire 1002/02 same-day before 6:45&nbsp;PM ET (pacs.004 in the ISO&nbsp;20022 era).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WHY ================= -->
+<section class="hairline-top">
+  <div class="wrap">
+    <div class="rv">
+      <span class="eyebrow">06 · Why it matters</span>
+      <h2>What OPF buys us</h2>
+    </div>
+    <div class="why-grid">
+      <div class="why rv"><div class="wt">ISO 20022, inherited</div><p>Fedwire migrated to ISO 20022 in July 2025. OPF has carried strong ISO support since 2022 — readiness we inherit rather than build.</p></div>
+      <div class="why rv"><div class="wt">Compliance as a platform feature</div><p>OFAC / AML screening, cut-offs, duplicate checks, and audit trails are OPF capabilities — not custom code we maintain and certify.</p></div>
+      <div class="why rv"><div class="wt">No home-grown pipelines</div><p>We never build our own Fedwire, CHIPS, or SWIFT connectivity. OPF is the orchestration layer between us and the networks.</p></div>
+      <div class="why rv"><div class="wt">Merger-friendly ground</div><p>FIS platforms are widely deployed and stable — a lower-risk anchor while Discover and Capital One payment stacks converge.</p></div>
+      <div class="why wide rv"><div class="wt">The one-liner for the room</div><p>One engine, every outbound wire — understand OPF and you understand how Discover moves money.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= GLOSSARY ================= -->
+<section class="hairline-top">
+  <div class="wrap">
+    <div class="rv">
+      <span class="eyebrow">Appendix</span>
+      <h2>Who's who in the wire stack</h2>
+    </div>
+    <div class="gloss rv">
+      <dl style="display:contents">
+        <div class="g"><dt>FIS OPF</dt><dd>Open Payments Framework — outbound wire engine (ex-Quantum)</dd></div>
+        <div class="g"><dt>Wires-App</dt><dd>Customer-facing wires UI &amp; APIs</dd></div>
+        <div class="g"><dt>Atlas</dt><dd>Agent processing for paper / fax / mail wires</dd></div>
+        <div class="g"><dt>IBM BPM</dt><dd>Wire case management &amp; dual approvals (“Almanac”)</dd></div>
+        <div class="g"><dt>Wires Batch</dt><dd>Spring Batch app — cases to OPF, statuses back to BPM</dd></div>
+        <div class="g"><dt>AutoSys</dt><dd>Scheduler for request, response &amp; file-watch jobs</dd></div>
+        <div class="g"><dt>DFTP</dt><dd>In-house enterprise file transmission</dd></div>
+        <div class="g"><dt>BT Payments / Pep+</dt><dd>Mainframe hub — formats files for OPF, cuts BCP backups</dd></div>
+      </dl>
+      <dl style="display:contents">
+        <div class="g"><dt>Finacle</dt><dd>Core banking — debits, credits, general ledger</dd></div>
+        <div class="g"><dt>EDP</dt><dd>Fraud decision engine for wire requests</dd></div>
+        <div class="g"><dt>Beacon</dt><dd>Inbound wires workflow portal</dd></div>
+        <div class="g"><dt>DataHub</dt><dd>Internal ETL for inbound BNY files</dd></div>
+        <div class="g"><dt>ComplianceLink</dt><dd>FIS OFAC / sanctions screening</dd></div>
+        <div class="g"><dt>BNY Mellon</dt><dd>Correspondent bank &amp; settlement agent</dd></div>
+        <div class="g"><dt>BCP files</dt><dd>Backups cut by Pep+ — manual processing via JPMorgan if OPF is down</dd></div>
+        <div class="g"><dt>Morse</dt><dd>Notification / communications system</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<footer class="hairline-top">
+  <div class="wrap">
+    <div class="fline">THE WIRE ROOM · Money Movement · compiled from the wires-transfer-batch wiki, inbound flow docs, and Architecture &amp; Data Stores</div>
+  </div>
+</footer>
+
+<script>
+  document.documentElement.classList.add("js");
+
+  // scrolling filename ticker in the hero
+  (function () {
+    var names = [
+      "DEPW21042023173216.txt",
+      "CHP0.DEPOSITS.FEDWIRE",
+      "CHP0.ACHM320.SUNGARD.DEPOSITS",
+      "PROD_BPM_20260901_084512.txt",
+      "ACK_PROD_BPM_20260901_084512.txt.SENT"
+    ];
+    var el = document.getElementById("ticker");
+    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!el || reduced) return;
+    var i = 0;
+    setInterval(function () {
+      i = (i + 1) % names.length;
+      el.style.opacity = "0";
+      setTimeout(function () { el.textContent = names[i]; el.style.opacity = "1"; }, 240);
+    }, 2600);
+    el.style.transition = "opacity 0.24s ease";
+  })();
+
+  // reveal + rail fill: plain scroll-position checks (works even where
+  // IntersectionObserver callbacks are unreliable)
+  (function () {
+    var fill = document.getElementById("railFill");
+    var wrapEl = document.querySelector(".rail-wrap");
+    var ct = document.getElementById("clockTrack");
+    var rvs = Array.prototype.slice.call(document.querySelectorAll(".rv"));
+    var stations = Array.prototype.slice.call(document.querySelectorAll(".station"));
+    var ticking = false;
+
+    function update() {
+      ticking = false;
+      var vh = window.innerHeight || 800;
+      rvs = rvs.filter(function (n) {
+        var r = n.getBoundingClientRect();
+        if (r.top < vh * 0.88 && r.bottom > 0) { n.classList.add("in"); return false; }
+        return true;
+      });
+      stations.forEach(function (n) {
+        var r = n.getBoundingClientRect();
+        if (r.top < vh * 0.7 && r.bottom > 0) { n.classList.add("lit"); }
+      });
+      if (ct) {
+        var cr = ct.getBoundingClientRect();
+        if (cr.top < vh * 0.75 && cr.bottom > 0) { ct.classList.add("in"); }
+      }
+      if (fill && wrapEl) {
+        var wr = wrapEl.getBoundingClientRect();
+        var progress = (vh * 0.65 - wr.top) / wr.height;
+        progress = Math.max(0, Math.min(1, progress));
+        fill.style.height = (progress * 100) + "%";
+      }
+    }
+    function onScroll() {
+      if (!ticking) { ticking = true; window.requestAnimationFrame(update); }
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    window.addEventListener("load", update);
+    update();
+    // safety net: if nothing has revealed shortly after load (headless
+    // renderers, odd embeds), show everything
+    setTimeout(function () {
+      if (document.querySelectorAll(".rv.in").length < 4) {
+        document.querySelectorAll(".rv").forEach(function (n) { n.classList.add("in"); });
+      }
+    }, 1800);
+  })();
+</script>
