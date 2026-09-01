@@ -1,180 +1,25 @@
-Disposition: False positive (pending Flux platform confirmation). Producer authentication for the loans-deposits topics consumed here is enforced at the Flux broker via mTLS client certificates and topic-level WRITE ACLs, not in consumer code; the scanner cannot see this layer. Consumer connects with a PKCS12 client keystore (east1-prod1-values.yaml L47–54), topic auto-creation is disabled (L56), and payloads are schema-registry-governed Avro (L64). Account deletion is additionally gated to product codes 002/003 and verified against FIS before acting (BillpayFluxEventListener.java L113–116). Message-level signing would require producer changes owned by the loans-deposits domain and cannot be applied unilaterally by this service. Status: Team is validating ACL/mTLS enforcement with the Flux platform team; written confirmation will be attached to the issue before closure.
+Hi team,
 
+I'm writing to request your guidance on a time-sensitive matter. My father in India is in critical condition and on ventilator support, and I may need to travel to India on short notice. I'd like to understand my options and the steps I should take before making travel plans.
 
-# VulnHunter CWE-306 Findings on Kafka Listeners — False Positive Case
+For reference, my current situation:
 
-**Repo:** billpay-customer-api
-**Branch:** feature/vuln-hunter-fix
-**Findings:** Row 7 and Row 8 of `billpay-vuln-hunter-fix_applied` (billpay-customer-api tab)
-**Owner:** Billpay Customer team
-**Needs input from:** Flux (Kafka) Platform team
+- My H-1B status is valid, with the amendment approved and I-94 and I-797 valid through February 9, 2029.
+- My current H-1B visa stamp, issued in November 2025 and valid through February 3, 2027, was issued against the original petition, which was revoked in February 2026.
+- A Motion to Reopen (I-290B) was filed on that petition and received on February 19, 2026. I have not seen an update on it since.
 
----
+I would appreciate your guidance on the following:
 
-## 1. Background — what VulnHunter is and why this showed up
+1. Whether the current visa stamp remains valid for re-entry with the new I-797 approval, or whether new visa stamping will be required.
 
-VulnHunter is Capital One's AI-based SAST scanner. As part of the Discover → Capital One migration, our repos are being mirrored to C1 GitHub and scanned against C1's rule set. Every finding is opened as a GitHub issue per repo, and each team is responsible for closing them.
+2. If new stamping is required, the recommended approach for scheduling an appointment in India on an expedited basis given the medical emergency, your recommendation on consulate, and the documents I should carry, including a support letter from the firm if appropriate.
 
-Two of ours are rated **High**, both CWE-306 (*Missing Authentication for Critical Function*):
+3. The current status of the I-290B and its receipt number.
 
-| Row | Finding | Location reported |
-|---|---|---|
-| 7 | Missing message-level authentication on `accountClosed` Kafka listener | `BillpayFluxEventListener.java:98` |
-| 8 | Missing message-level authentication on `emailMessage` Kafka listener | `BillpayFluxEventListener.java:64` |
+4. Any other steps I should complete before travel.
 
-VulnHunter's proposed fix: *"Verify a cryptographic signature envelope (JWS or HMAC) on every Kafka message at consumption; reject unsigned or signature-mismatched messages."*
+I'm ready to start the DS-160 and book an appointment right away if that is your recommended first step. Given the circumstances, I'd be grateful for a response at your earliest convenience and am available for a call at any time.
 
-Note: the reported path is `.../billpay/event/listener/BillpayFluxEventListener.java`. The actual package is `com.discover.bank.billpay.customer.listener`. Same class, just a path discrepancy in the scan output — worth mentioning so nobody goes hunting for a second file.
-
-## 2. What the scanner is actually saying
-
-The scanner read the listener and saw this flow (line numbers from the file on the branch):
-
-- **Line 63–64** — `@KafkaListener(topics = {"${event.topic.email.created}", "${event.topic.email.updated}"}, id = CustomerConstants.UPDATE_EMAIL_LISTENER, idIsGroup = false)` on `emailMessage(ConsumerRecord<String, GenericRecord> message, Acknowledgment acknowledgment)`
-- **Line 76–78** — `GenericRecord genericRecord = message.value();` then `objectMapper.readValue(genericRecord.toString(), ContactInfoEmailEvent.class)`
-- **Line 80–82** — `Predicate<ContactInfoEmailEvent> eventPredicate = e -> customerBO.updateCustomerInfo(e.getCustomerId(), transformContactEvent(e));` then `processEvent(...)`
-- **Line 97–98** — `@KafkaListener(topics = "${event.topic.account.closed}", id = CustomerConstants.ACCOUNT_CLOSED_LISTENER, ...)` on `accountClosedMessage(...)`
-- **Line ~113–117** — `if (Arrays.asList(CHECKING_CODE, MMA_CODE).contains(accountClosedEvent.getBankProductGroupCode()))` → `customerBO.verifyAndDeleteFundingAccountFromFIS(e)`
-
-Between "message arrives" and "we call FIS," there is no step in *our code* that checks who produced the message. That is all the scanner can see. Its premise is therefore: *any client that can reach the broker can publish a forged `accountClosed` or `email.updated` event and we will act on it.*
-
-## 3. Our position — the control exists, it's just not in the consumer
-
-Capital One's Kafka standard (which is what VulnHunter's rules encode) assumes a shared, multi-tenant broker where producer identity is not trustworthy at the topic level, so consumers must verify a signature on each message.
-
-Discover's Flux platform is architected differently: producer identity is authenticated by the broker via mTLS, and write access to a topic is restricted by broker-side ACLs. If only the loans-deposits domain services are permitted to produce to our three topics, then the scanner's premise ("any client with broker access") is false — the authentication is enforced one layer down, at the broker, before the message ever reaches us.
-
-This is the architecture gap. The finding is a **false positive by platform design**, not a missing control. To close it we need the Flux team to confirm that design in writing.
-
-## 4. Evidence from our own code and config
-
-Take this to the meeting. Every line below is in the repo on `feature/vuln-hunter-fix`.
-
-### 4a. The consumer authenticates to Flux with mTLS (`east1-prod1-values.yaml`)
-
-```
-46  bootstrap-servers: "kafka-bootstrap.prod.flux.discoverfinancial.com:443"
-47  ssl:
-48    protocol: SSL
-49    key-store-type: PKCS12
-50    key-store-location: file:${FLUX_ENCODED_KEYSTORE_FILE}
-51    key-store-password: ${fluxKeyStorePwd}
-53  properties:
-54    security.protocol: SSL
-57    schema.registry.url: "https://schema-api.prod.flux.discoverfinancial.com"
-```
-
-A **client keystore** (not just a truststore) means we present a certificate to the broker. This is mutual TLS — the broker knows exactly which principal every connection belongs to. That is the same mechanism producers use. So the broker *can* enforce who writes to a topic; the question for Flux is whether it *does*.
-
-### 4b. We consume from domain-owned topics we do not produce to (`east1-prod1-values.yaml`)
-
-```
-66  event:
-67    topic:
-68      email:
-69        created: business.direct-banking.loans-deposits.customer.contactinfo.email.created
-70        updated: business.direct-banking.loans-deposits.customer.contactinfo.email.updated
-71      account:
-72        closed: business.direct-banking.loans-deposits.deposits.account.activity.closed
-```
-
-These are `loans-deposits` domain topics. Billpay is a read-only consumer. The producer is a separate, platform-onboarded domain service. This matters for the remediation argument in §6: even if C1 wanted signed envelopes, we cannot add signing on the producer side — that's another domain's code.
-
-### 4c. Consumer identity and topic governance are platform-managed
-
-```
-56  auto.create.topics.enable: false
-62  group-id: 17fce0e0a4c3d34c399c9c486f14bdded5
-```
-
-Topic auto-creation is off (topics are provisioned by Flux, not by clients), and the consumer group ID is a platform-issued opaque identifier rather than a team-chosen name — both indicate Flux governs who is registered against which topic.
-
-### 4d. Payloads are schema-governed Avro, not free-form
-
-```
-63  key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-64  value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
-```
-
-Every message must deserialize against a registered schema in the Flux schema registry. A producer that isn't onboarded to the registry can't publish a record we would accept.
-
-### 4e. The business logic verifies before it mutates (`BillpayFluxEventListener.java`)
-
-```
-113  //Account Deletion at FIS only if Group Code is 002 or 003
-114  if (Arrays.asList(CHECKING_CODE, MMA_CODE)
-115          .contains(accountClosedEvent.getBankProductGroupCode())) {
-116      Predicate<AccountClosedEvent> eventPredicate = e -> customerBO.verifyAndDeleteFundingAccountFromFIS(e);
-```
-
-Two points:
-- The delete path is gated to checking/MMA product codes only.
-- The method is named `verifyAndDeleteFundingAccountFromFIS`. **Action item (see §5):** confirm in `CustomerBO` that it checks the account's status at FIS before deleting. If it does, the Kafka event is a *trigger*, not the *authority* — a forged event cannot delete an account that is still open at FIS. That is a compensating control the scanner could not see.
-
-### 4f. Failure handling is bounded and non-destructive (`processEvent`, lines 136–171)
-
-```
-50   @Value("${failedevent.retry.count}")
-51   private int maxRetryCount;
-...
-155  while (retryCount < getMaxRetryCount()) {
-...
-147  final ObjIntConsumer<FluxEvent> logMaxWarnConsumer = (x, c) -> {
-149      log.warn("Email Updated Failed with RetryCount: {} for CustomerID: {} -- Update the Customer EmailID Manually." ...
-151      log.warn("Account: {} Deletion Failed with RetryCount: {} -- Delete the Account Manually." ...
-```
-
-Retries are capped (Javadoc says 3), exceptions are logged and swallowed rather than crashing the listener, and offsets are committed manually (`ack-mode: manual_immediate`, `enable-auto-commit: false`, `acknowledgeEvent()` at line 173). A bad message does not poison the consumer or cause runaway retries.
-
-## 5. What we need from the Flux team
-
-Ask for these in writing (Confluence page, email, or a comment on the GitHub issue). Without them the false-positive claim is just our assertion.
-
-1. **Producer ACLs.** For each of the three topics in §4b: which principals (certificate CNs / service accounts) have `WRITE` permission? Confirm it is only the loans-deposits domain producer(s) and that ACLs are enforced (`allow.everyone.if.no.acl.found=false` or the Flux equivalent).
-2. **mTLS enforcement.** Confirm the prod bootstrap (`kafka-bootstrap.prod.flux.discoverfinancial.com:443`) requires client certificates for all connections — no plaintext or anonymous listener exists.
-3. **Certificate issuance.** How are client keystores issued and to whom? (Internal CA, per-service, revocable.) This answers "could an attacker just get a cert?"
-4. **Topic ownership.** Confirm the loans-deposits domain owns and is the sole publisher to these topics, and that topic creation is platform-gated (consistent with `auto.create.topics.enable: false`).
-5. **Schema registry auth.** Confirm schema registration is restricted to topic owners.
-6. **Is there a Flux-wide position on message-level signing?** If other teams have the same finding, Flux may already have a standard answer for C1. Better to align than each team arguing separately.
-
-Internal action items (our team, not Flux):
-
-- [ ] Open `CustomerBO.verifyAndDeleteFundingAccountFromFIS()` and document exactly what "verify" does. Attach that snippet to the issue.
-- [ ] Check what `updateCustomerInfo()` validates before pushing an email to FIS. If nothing, note it — see §7.
-- [ ] Fix `ssl.endpoint.identification.algorithm: ""` (line 55) — see §7.
-
-## 6. Talking points and likely pushback
-
-**"CWE-306 says the function must authenticate the caller."**
-The caller *is* authenticated — by the broker, via mTLS and ACLs. CWE-306 does not require authentication to be implemented in the consumer's code; it requires it to exist before the critical function is reachable. On Flux it exists at the transport/broker layer.
-
-**"Why not just add HMAC/JWS verification as VulnHunter suggests?"**
-Because we don't own the producer. The topics belong to the loans-deposits domain (§4b). A consumer-only change that rejects unsigned messages would drop 100% of traffic until every producer signs, and would break every other consumer of those topics who hasn't adopted the same scheme. Message signing on Flux is a platform-level standard, not a per-consumer patch.
-
-**"An attacker inside the mesh could still publish."**
-Only if they hold a client certificate that is ACL'd to write to that topic. That's what item 1 and 3 in §5 establish. Being "on the network" is not sufficient on an mTLS + ACL broker.
-
-**"What's the blast radius if the platform control failed?"**
-Account path: gated to product codes 002/003, and (pending confirmation) verified against FIS before deletion. Email path: overwrites a contact email at FIS for the customer ID in the event — this is the weaker of the two, which is why §7 exists.
-
-## 7. Be honest about the soft spots
-
-C1 reviewers will read the same config we did. Two things weaken our argument if we don't address them up front:
-
-1. **`ssl.endpoint.identification.algorithm: ""` (line 55).** This disables hostname verification of the broker certificate. It doesn't affect *producer* authentication (that's the broker's job), but it weakens our own client-side trust in the broker and will almost certainly surface as its own finding. Fix it now — set it to `https` if the broker certs carry proper SANs, or ask Flux why it was disabled. Do not walk into the meeting with this still in the file.
-
-2. **The email path has no verification against a system of record.** `updateCustomerInfo()` appears to push whatever `customerId` + email arrives. If Flux ACLs are confirmed, this is still safe, but if a reviewer asks "what if the producer service itself is compromised?", we have no answer on this path. Optional hardening: before calling FIS, fetch the customer's current email from the customer profile service and only proceed if the event's value differs from and supersedes it. Small change, closes the gap without touching producers.
-
-Also minor, not a security issue but shows up in the "how loose is this consumer" question: `initObjectMapper()` (line 54) sets `FAIL_ON_UNKNOWN_PROPERTIES = false` and the listener round-trips Avro through `GenericRecord.toString()` → Jackson. Using Avro `SpecificRecord` classes would let the schema registry enforce shape directly.
-
-## 8. Proposed closure note for the GitHub issues (Rows 7 & 8)
-
-> **Disposition: False positive — control enforced at platform layer.**
->
-> Producer authentication for the three Flux topics consumed by this service (`business.direct-banking.loans-deposits.customer.contactinfo.email.created`, `...email.updated`, `...deposits.account.activity.closed`) is enforced by the Flux Kafka platform via mutual TLS client certificates and broker-side topic ACLs restricting `WRITE` to the loans-deposits domain producer. Evidence: [link to Flux ACL confirmation]. Consumer connects with a PKCS12 client keystore (`east1-prod1-values.yaml` L47–54), topic auto-creation is disabled (L56), and payloads are schema-registry-governed Avro (L64).
->
-> Compensating controls in the consumer: account deletion is gated to product codes 002/003 and calls `verifyAndDeleteFundingAccountFromFIS`, which confirms account status at FIS before acting (`CustomerBO`, [link]). Retries are bounded and offsets committed manually.
->
-> Message-level signing (JWS/HMAC envelope) would require changes to producers owned by the loans-deposits domain and a Flux-wide signing standard; billpay-customer-api cannot implement it unilaterally. Tracked as a platform ask: [ticket].
->
-> Related hardening applied in this PR: enabled broker hostname verification (`ssl.endpoint.identification.algorithm`).
+Thank you,
+Vasanth Senthamarai Kannan
+Employee ID 2006562
