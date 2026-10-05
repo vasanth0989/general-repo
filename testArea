@@ -1,8 +1,13 @@
 Current Challenges in Wire Operations:
-• Outgoing wires rely on DFS-owned legacy integrations due for decommissioning by May 17, 2027, creating complex interdependencies.
-• FIS OPF (SaaS) sits at the center of these integrations. Being vendor-hosted, it can remain past May 2027 as the gateway to the correspondent banks, while Monetary Transfer, Compliance Link, DFS Quantum, CMOD and FX move to Capital One. OPF itself is decommissioned in Q4 2027.
+• Outgoing wire operations involve multiple legacy DFS integrations that must be decommissioned by May 17, 2027, creating complex interdependencies.
+• The FIS OPF (SaaS) component occupies a central position among these integrations. Each has unique functional requirements, necessitating a substantial development effort to achieve the target state.
+
+Approach and Timeline:
+• Phase 1 (go-live Apr 2027): wire processing moves to PayX and OnePay. OPF remains only as the gateway to the correspondent banks.
+• Phase 2 (go-live Sep 2027): PayX connects to the banks directly. OPF is decommissioned in Q4 2027.
+
 Ongoing Efforts and Strategic Coordination:
-• Technical Solutioning in Progress: Phase 1 (Apr 2027) moves processing to PayX and OnePay; Phase 2 (Sep 2027) connects PayX directly to the correspondent banks.
-• Cross-LOB/Team Coordination: Rigorous collaboration across GPN, Treasury, Finance, Compliance, Operations and FIS is actively taking place to ensure comprehensive solutioning.
+• Technical Solutioning: Architecture for both phases is documented, pending review board ratification.
+• Cross-LOB/Team Coordination: Rigorous collaboration across lines of business, teams and FIS is actively taking place.
 • Squad and Pod Formation: Three engineering pods and a OnePay track are in place, planning the Oct 2026 to Jan 2027 build.
-• Key Dependency: Phase 1 relies on extending the FIS OPF contract to about Q4 2027, which is not yet secured.
+• Key Dependency: The FIS OPF contract must be extended to about Q4 2027. This is not yet secured.
