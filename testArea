@@ -1,13 +1,8 @@
-Current Challenges in Wire Operations:
-• Outgoing wire operations involve multiple legacy DFS integrations that must be decommissioned by May 17, 2027, creating complex interdependencies.
-• The FIS OPF (SaaS) component occupies a central position among these integrations. Each has unique functional requirements, necessitating a substantial development effort to achieve the target state.
-
-Approach and Timeline:
-• Phase 1 (go-live Apr 2027): wire processing moves to PayX and OnePay. OPF remains only as the gateway to the correspondent banks.
-• Phase 2 (go-live Sep 2027): PayX connects to the banks directly. OPF is decommissioned in Q4 2027.
-
-Ongoing Efforts and Strategic Coordination:
-• Technical Solutioning: Architecture for both phases is documented, pending review board ratification.
-• Cross-LOB/Team Coordination: Rigorous collaboration across lines of business, teams and FIS is actively taking place.
-• Squad and Pod Formation: Three engineering pods and a OnePay track are in place, planning the Oct 2026 to Jan 2027 build.
-• Key Dependency: The FIS OPF contract must be extended to about Q4 2027. This is not yet secured.
+[ ] Existing payment object fields are inventoried and documented
+[ ] pain.001 V11 XSD is in the new repo and Java classes generate from it under Gradle
+[ ] Field mapping from payment object to V11 XML is documented, including gaps and decisions on optional elements
+[ ] Differences between the FIS specification and the ISO V11 schema are documented
+[ ] A reference V11 XML message is produced from a sample payment object and validates against the XSD
+[ ] Library design note (repo, build, package layout, public API) is written
+[ ] Open questions for FIS are listed with owners
+[ ] Analysis is published on the Wire II design page and reviewed with the tech lead
