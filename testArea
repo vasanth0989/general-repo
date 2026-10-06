@@ -1,8 +1,24 @@
-[ ] Existing payment object fields are inventoried and documented
-[ ] pain.001 V11 XSD is in the new repo and Java classes generate from it under Gradle
-[ ] Field mapping from payment object to V11 XML is documented, including gaps and decisions on optional elements
-[ ] Differences between the FIS specification and the ISO V11 schema are documented
-[ ] A reference V11 XML message is produced from a sample payment object and validates against the XSD
-[ ] Library design note (repo, build, package layout, public API) is written
-[ ] Open questions for FIS are listed with owners
-[ ] Analysis is published on the Wire II design page and reviewed with the tech lead
+Here's a leadership-ready version. Paste as-is or trim further.
+
+---
+
+**Incident summary: BillPay outage, Oct 2, 8:00–9:30pm EST**
+
+All four BillPay APIs lost connectivity to FIS, returning HTTP 403. The outage began at the exact minute our previous mTLS client certificate expired. Service was restored by restarting all BillPay pods across clusters.
+
+**Root cause**
+
+The client certificate was renewed on Sept 17 and FIS confirmed installation. However, the pods running on Oct 2 were still presenting the old certificate. The application loads its certificate once, at JVM startup, and never re-reads it. Because FIS accepted both the old and new certificate between Sept 17 and Oct 2, the services appeared healthy during that window, and the stale certificate was only exposed when the old one expired. The restart forced every pod to load the new certificate from Vault, which resolved the issue.
+
+There was no defect in the application code, the network, the proxy, or on the FIS side. The gap was in the rotation process: the deployment that followed the Vault update did not result in every pod starting with the new value, and there was no verification step that would have caught it.
+
+**Preventive actions**
+
+1. Add a mandatory post-rotation validation step to the certificate installation plan: after the Vault update, force a rolling restart of every BillPay pod in every cluster and confirm, from each pod's startup log, that the loaded certificate serial number matches the new certificate. "Calls succeed" is not sufficient during the overlap window.
+2. Log the loaded certificate's subject, serial, and expiry at startup so the above check takes seconds.
+3. Add an expiry alert on the loaded certificate (30 days, 7 days, expired) and fail pod readiness if the loaded certificate is expired.
+4. Schedule rotation at least 30 days before expiry to leave time for validation.
+
+---
+
+Two things to fill in before sending: the exact Vault update timestamp vs. pod start times (confirms which pods were stale and why), and FIS's edge log showing the old certificate serial at 8pm. If you want, I can also draft the validation checklist as a one-page runbook for the installation plan.
