@@ -1,25 +1,26 @@
-Drafting the story now, in the same format as the analysis story: title, points, one-paragraph description, checklist criteria.
+pluginManagement {
+    repositories {
+        maven {
+            url = uri(providers.gradleProperty('artifactoryUrl').get())
+            credentials {
+                username = providers.gradleProperty('artifactoryUser').get()
+                password = providers.gradleProperty('artifactoryToken').get()
+            }
+        }
+    }
+}
 
-Paste-ready, saved at [story-jira.md](shelf/generated/2026-10-19-story-mapper-implementation/story-jira.md):
+dependencyResolutionManagement {
+    repositoriesMode = RepositoriesMode.PREFER_SETTINGS
+    repositories {
+        maven {
+            url = uri(providers.gradleProperty('artifactoryUrl').get())
+            credentials {
+                username = providers.gradleProperty('artifactoryUser').get()
+                password = providers.gradleProperty('artifactoryToken').get()
+            }
+        }
+    }
+}
 
-**Story:** Implement wire-ii-pain001-mapper to convert the Payment Object to pain.001 V11 XML
-**Points:** 5
-
-**Description**
-
-Taking up the analysis from the previous story (payment object inventory, field mapping, V11 XSD) and building the mapping library wire-ii-pain001-mapper. The library takes a completed Payment Exchange payment object for an outbound GPN or corporate wire and produces a pain.001.001.11 XML document that validates against the XSD. The group header, payment information and credit transfer transaction blocks are implemented per the field mapping document, including the party and agent identification, structured postal address, FX amounts, charge bearer, remittance information and bank-to-bank instructions. Decisions still open with the tech lead or FIS are implemented behind clearly named rules so they can be changed without touching the mapping. The XML-to-JSON rendering for the FIS API is a separate story.
-
-**Acceptance criteria**
-
-```
-[ ] Gradle library builds on Java 21 with the V11 classes generated from the XSD and is publishable to Artifactory
-[ ] Group header, payment information and credit transfer transaction blocks are mapped per the field mapping document
-[ ] Party, agent, account and postal address mapping covers debtor, creditor, ultimate parties and intermediary agents
-[ ] Amount, currency, FX, charge bearer, payment type and identifier rules are implemented as named, configurable rules
-[ ] Every generated message validates against the pain.001.001.11 XSD and mapping failures are reported with the field that caused them
-[ ] Unit tests cover each block with sample payment objects for a GPN wire and a corporate wire, with golden XML files
-[ ] No account number, name or amount is written to logs
-[ ] Library is reviewed with the tech lead and the open mapping decisions are recorded on the Wire II design page
-```
-
-Two notes on the sizing. This is the epic's story 2 reworded for the new library, kept at 5 points by leaving XML-to-JSON (story 3) and the BAH wrapper (story 4) out. The "named, configurable rules" criterion is there because eleven mapping decisions are still with Kaushik; the story should not wait on them.
+rootProject.name = 'bank-wire-ii-api'
