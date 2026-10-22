@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JWT Decoder</title>
+<style>
+  :root { --bg:#f7f8fa; --surface:#fff; --text:#1c2430; --muted:#5b6675; --line:#dde2e8; --accent:#0f766e; --h:#dbeafe; --p:#fde68a; --s:#fce7f3; --ok:#15803d; --ok-soft:#dcf5e3; --bad:#b91c1c; --bad-soft:#fde2e2; --warn:#b45309; --warn-soft:#fdf1dc; --code:#eef1f5; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#0f141a; --surface:#171e26; --text:#e6ebf0; --muted:#9aa6b4; --line:#2b3440; --accent:#2dd4bf; --h:#1e3a5f; --p:#5a4400; --s:#4a1d3a; --ok:#4ade80; --ok-soft:#0f2e1a; --bad:#f87171; --bad-soft:#3b1212; --warn:#f59e0b; --warn-soft:#3a2a0c; --code:#0b1016; } }
+  :root[data-theme="dark"] { --bg:#0f141a; --surface:#171e26; --text:#e6ebf0; --muted:#9aa6b4; --line:#2b3440; --accent:#2dd4bf; --h:#1e3a5f; --p:#5a4400; --s:#4a1d3a; --ok:#4ade80; --ok-soft:#0f2e1a; --bad:#f87171; --bad-soft:#3b1212; --warn:#f59e0b; --warn-soft:#3a2a0c; --code:#0b1016; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  main { max-width: 1000px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 20px; margin: 8px 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 12px; }
+  textarea { width:100%; min-height:120px; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--text); font:13px/1.45 ui-monospace,Menlo,Consolas,monospace; word-break: break-all; resize: vertical; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:10px 0; }
+  button { background:var(--accent); color:#06201d; border:none; border-radius:8px; padding:9px 14px; font-size:14px; cursor:pointer; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) button { color:#fff; } }
+  button.secondary { background:var(--surface); color:var(--text); border:1px solid var(--line); }
+  .status { padding:10px 12px; border-radius:8px; margin:10px 0; display:none; }
+  .status.ok { display:block; background:var(--ok-soft); border-left:4px solid var(--ok); }
+  .status.bad { display:block; background:var(--bad-soft); border-left:4px solid var(--bad); }
+  .status.warn { display:block; background:var(--warn-soft); border-left:4px solid var(--warn); }
+  .grid { display:grid; grid-template-columns:1fr; gap:12px; }
+  @media (min-width: 820px) { .grid { grid-template-columns: 1fr 1fr; } }
+  .part { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--surface); }
+  .part h2 { margin:0; font-size:14px; padding:8px 12px; }
+  .part.h h2 { background:var(--h); } .part.p h2 { background:var(--p); } .part.s h2 { background:var(--s); }
+  pre { margin:0; padding:12px; font:12.5px/1.45 ui-monospace,Menlo,Consolas,monospace; white-space:pre-wrap; word-break:break-all; background:var(--code); min-height:60px; }
+  .raw { font:12px/1.5 ui-monospace,Menlo,Consolas,monospace; word-break:break-all; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:var(--surface); }
+  .raw .h { background:var(--h); } .raw .p { background:var(--p); } .raw .s { background:var(--s); }
+  table { border-collapse:collapse; width:100%; margin:12px 0; font-size:14px; background:var(--surface); }
+  th, td { border:1px solid var(--line); padding:7px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--code); }
+  code { font-family: ui-monospace,Menlo,Consolas,monospace; font-size:13px; }
+  .note { color:var(--muted); font-size:13px; margin-top:16px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>JWT decoder</h1>
+  <p class="lead">Paste an access token. Everything happens in this page; nothing is sent anywhere. Header and payload are only base64url-encoded, so they decode without any key. The signature cannot be verified here, since that needs the issuer's public key.</p>
+
+  <textarea id="tok" placeholder="eyJhbGciOi... (paste the whole token, or a full 'Bearer eyJ...' header value)" spellcheck="false"></textarea>
+  <div class="row">
+    <button onclick="decode()">Decode</button>
+    <button class="secondary" onclick="document.getElementById('tok').value='';decode()">Clear</button>
+    <label><input type="checkbox" id="auto" checked> decode as I type</label>
+  </div>
+  <div id="status" class="status"></div>
+
+  <div id="raw" class="raw" style="display:none"></div>
+
+  <div class="grid" id="parts" style="display:none">
+    <div class="part h"><h2>Header</h2><pre id="hdr"></pre></div>
+    <div class="part p"><h2>Payload (claims)</h2><pre id="pl"></pre></div>
+    <div class="part s" style="grid-column:1/-1"><h2>Signature (raw base64url, not verifiable here)</h2><pre id="sig"></pre></div>
+  </div>
+
+  <div id="claims"></div>
+
+  <p class="note">Expected on an FIS Sandbox token: <code>exp - iat</code> equal to the validity you requested (3,600 or 7,200 seconds), <code>sub</code> or a client id claim matching the consumer key, and an issuer on the FIS gateway domain. A token that decodes fine but is past <code>exp</code> produces the gateway's 401 "Invalid Credentials" (fault 900901).</p>
+</main>
+<script>
+function b64url(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  var bin = atob(s), bytes = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+function fmtTs(v) {
+  if (typeof v !== 'number') return '';
+  var ms = v < 1e12 ? v * 1000 : v;
+  var d = new Date(ms);
+  return d.toISOString().replace('T', ' ').replace(/\.\d+Z$/, ' UTC') + '  (local ' + d.toLocaleString() + ')';
+}
+function human(sec) {
+  sec = Math.round(sec); var a = Math.abs(sec), h = Math.floor(a / 3600), m = Math.floor((a % 3600) / 60), s = a % 60;
+  return (h ? h + 'h ' : '') + (m ? m + 'm ' : '') + s + 's';
+}
+var known = {
+  iss: 'Issuer: who minted the token. Should be the FIS gateway.',
+  sub: 'Subject: the client (application) this token was issued to.',
+  aud: 'Audience: the API or gateway this token is valid for.',
+  exp: 'Expires at.', iat: 'Issued at.', nbf: 'Not valid before.',
+  jti: 'Token id, unique per token.', scope: 'Scopes granted (none expected for EP-POM-CCTI).',
+  azp: 'Authorized party: the client id that requested the token.',
+  client_id: 'Client id (consumer key).', keytype: 'Gateway key type (SANDBOX or PRODUCTION on WSO2-based gateways).',
+  tierInfo: 'Throttling tiers attached to this token.', subscribedAPIs: 'APIs the application may call with this token.',
+  application: 'The registered application this token belongs to.', token_type: 'Token type.', 'http://wso2.org/claims/keytype': 'Environment key type.'
+};
+function decode() {
+  var el = document.getElementById('tok'), raw = el.value.trim();
+  var st = document.getElementById('status'), parts = document.getElementById('parts'), rawbox = document.getElementById('raw'), claims = document.getElementById('claims');
+  st.className = 'status'; parts.style.display = 'none'; rawbox.style.display = 'none'; claims.innerHTML = '';
+  if (!raw) return;
+  raw = raw.replace(/^Bearer\s+/i, '').replace(/^Authorization:\s*Bearer\s+/i, '').replace(/^["']|["']$/g, '').replace(/\s+/g, '');
+  var seg = raw.split('.');
+  if (seg.length !== 3) { st.className = 'status bad'; st.textContent = 'Not a JWT: expected three dot-separated parts, found ' + seg.length + '. An opaque token (random string) has no readable claims.'; return; }
+  var hdr, pl;
+  try { hdr = JSON.parse(b64url(seg[0])); } catch (e) { st.className = 'status bad'; st.textContent = 'Header is not valid base64url JSON: ' + e.message; return; }
+  try { pl = JSON.parse(b64url(seg[1])); } catch (e) { st.className = 'status bad'; st.textContent = 'Payload is not valid base64url JSON: ' + e.message; return; }
+  rawbox.style.display = 'block';
+  rawbox.innerHTML = '<span class="h">' + esc(seg[0]) + '</span>.<span class="p">' + esc(seg[1]) + '</span>.<span class="s">' + esc(seg[2]) + '</span>';
+  parts.style.display = 'grid';
+  document.getElementById('hdr').textContent = JSON.stringify(hdr, null, 2);
+  document.getElementById('pl').textContent = JSON.stringify(pl, null, 2);
+  document.getElementById('sig').textContent = seg[2] + '\n\n(' + seg[2].length + ' chars; algorithm ' + (hdr.alg || '?') + (hdr.kid ? ', key id ' + hdr.kid : '') + ')';
+  var now = Date.now() / 1000, rows = [], msg = '', cls = 'ok';
+  if (typeof pl.exp === 'number') {
+    var left = pl.exp - now;
+    if (left < 0) { cls = 'bad'; msg = 'EXPIRED ' + human(-left) + ' ago (exp ' + fmtTs(pl.exp) + '). The gateway will answer 401.'; }
+    else if (left < 300) { cls = 'warn'; msg = 'Valid, but expires in ' + human(left) + '. Mint a new one before testing.'; }
+    else { msg = 'Valid for another ' + human(left) + ' (expires ' + fmtTs(pl.exp) + ').'; }
+    if (typeof pl.iat === 'number') msg += ' Lifetime ' + human(pl.exp - pl.iat) + '.';
+  } else { cls = 'warn'; msg = 'No exp claim: lifetime unknown.'; }
+  st.className = 'status ' + cls; st.textContent = msg;
+  Object.keys(pl).forEach(function (k) {
+    var v = pl[k], shown = typeof v === 'object' ? JSON.stringify(v) : String(v);
+    var extra = (k === 'exp' || k === 'iat' || k === 'nbf') && typeof v === 'number' ? fmtTs(v) : '';
+    rows.push('<tr><td><code>' + esc(k) + '</code></td><td>' + esc(shown) + (extra ? '<br><span style="color:var(--muted)">' + esc(extra) + '</span>' : '') + '</td><td>' + esc(known[k] || '') + '</td></tr>');
+  });
+  claims.innerHTML = '<table><tr><th>Claim</th><th>Value</th><th>Meaning</th></tr>' + rows.join('') + '</table>';
+}
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+document.getElementById('tok').addEventListener('input', function () { if (document.getElementById('auto').checked) decode(); });
+</script>
+</body>
+</html>
