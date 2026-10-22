@@ -1,0 +1,264 @@
+{
+  "businessApplicationHeader": {
+    "characterSet": "UTF-8",
+    "from": {
+      "organisationIdentification": {
+        "identification": {
+          "organisationIdentification": {
+            "other": [
+              {
+                "identification": "POMBULK_CT",
+                "schemeName": {
+                  "proprietary": "paymentSystemId"
+                }
+              },
+              {
+                "identification": "custCBI_01",
+                "schemeName": {
+                  "proprietary": "coreBankIdentifier"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "to": {
+      "organisationIdentification": {
+        "identification": {
+          "organisationIdentification": {
+            "other": [
+              {
+                "identification": "XCT",
+                "schemeName": {
+                  "proprietary": "paymentSystemId"
+                }
+              },
+              {
+                "identification": "custCBI_01",
+                "schemeName": {
+                  "proprietary": "coreBankIdentifier"
+                }
+              },
+              {
+                "identification": "EC_CUSTCBI_01_POM_INCOMING",
+                "schemeName": {
+                  "proprietary": "endPointName"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "businessMessageIdentifier": "WIREII20261022173309",
+    "messageDefinitionIdentifier": "pain.001.001.11",
+    "businessService": "swift.cbprplus.02",
+    "marketPractice": {
+      "registry": "FIS EP Universal Execution",
+      "identification": "{#:2022 Edition 3}"
+    },
+    "creationDate": "2026-10-22T17:33:09.000Z"
+  },
+  "businessDocument": {
+    "customerCreditTransferInitiation": {
+      "groupHeader": {
+        "messageIdentification": "WIREII20261022173309",
+        "creationDateTime": "2026-10-22T17:33:09.000Z",
+        "numberOfTransactions": "1",
+        "controlSum": "1250.00",
+        "initiatingParty": {
+          "name": "Discover Bank",
+          "postalAddress": {
+            "addressType": {
+              "code": "ADDR"
+            },
+            "streetName": "Lake Cook Road",
+            "buildingNumber": "2500",
+            "postCode": "60015",
+            "townName": "Riverwoods",
+            "countrySubDivision": "IL",
+            "country": "US"
+          }
+        }
+      },
+      "paymentInformation": [
+        {
+          "paymentInformationIdentification": "WIREII20261022173309",
+          "paymentMethod": "TRF",
+          "batchBooking": false,
+          "numberOfTransactions": "1",
+          "controlSum": "1250.00",
+          "paymentTypeInformation": {
+            "instructionPriority": "HIGH",
+            "serviceLevel": [
+              {
+                "code": "URGP"
+              }
+            ],
+            "localInstrument": {
+              "proprietary": "CTR"
+            },
+            "categoryPurpose": {
+              "code": "CASH"
+            }
+          },
+          "requestedExecutionDate": {
+            "date": "2026-10-22"
+          },
+          "debtor": {
+            "name": "Acme Manufacturing LLC",
+            "postalAddress": {
+              "addressType": {
+                "code": "ADDR"
+              },
+              "streetName": "Main Street",
+              "buildingNumber": "100",
+              "postCode": "19801",
+              "townName": "Wilmington",
+              "countrySubDivision": "DE",
+              "country": "US"
+            },
+            "identification": {
+              "organisationIdentification": {
+                "other": [
+                  {
+                    "identification": "123456789",
+                    "schemeName": {
+                      "code": "TXID"
+                    }
+                  }
+                ]
+              }
+            },
+            "countryOfResidence": "US"
+          },
+          "debtorAccount": {
+            "identification": {
+              "other": {
+                "identification": "100012345678",
+                "schemeName": {
+                  "code": "BBAN"
+                }
+              }
+            },
+            "type": {
+              "code": "CACC"
+            },
+            "currency": "USD",
+            "name": "Acme Operating Account"
+          },
+          "debtorAgent": {
+            "financialInstitutionIdentification": {
+              "clearingSystemMemberIdentification": {
+                "clearingSystemIdentification": {
+                  "code": "USABA"
+                },
+                "memberIdentification": "031100649"
+              },
+              "name": "Discover Bank",
+              "postalAddress": {
+                "addressType": {
+                  "code": "ADDR"
+                },
+                "streetName": "Delaware Avenue",
+                "buildingNumber": "502",
+                "postCode": "19801",
+                "townName": "Wilmington",
+                "countrySubDivision": "DE",
+                "country": "US"
+              }
+            }
+          },
+          "chargeBearer": "SHAR",
+          "creditTransferTransactionInformation": [
+            {
+              "paymentIdentification": {
+                "instructionIdentification": "WIREII20261022173309",
+                "endToEndIdentification": "ACME-INV-2026-00417",
+                "uetr": "28d2c64d-2a85-4307-8043-3c5020a76f67"
+              },
+              "amount": {
+                "instructedAmount": {
+                  "amount": "1250.00",
+                  "currency": "USD"
+                }
+              },
+              "creditorAgent": {
+                "financialInstitutionIdentification": {
+                  "clearingSystemMemberIdentification": {
+                    "clearingSystemIdentification": {
+                      "code": "USABA"
+                    },
+                    "memberIdentification": "021000021"
+                  },
+                  "name": "JPMorgan Chase Bank, N.A.",
+                  "postalAddress": {
+                    "addressType": {
+                      "code": "ADDR"
+                    },
+                    "streetName": "Park Avenue",
+                    "buildingNumber": "270",
+                    "postCode": "10017",
+                    "townName": "New York",
+                    "countrySubDivision": "NY",
+                    "country": "US"
+                  }
+                }
+              },
+              "creditor": {
+                "name": "Beta Supplies Inc",
+                "postalAddress": {
+                  "addressType": {
+                    "code": "ADDR"
+                  },
+                  "streetName": "Market Street",
+                  "buildingNumber": "55",
+                  "postCode": "94105",
+                  "townName": "San Francisco",
+                  "countrySubDivision": "CA",
+                  "country": "US"
+                },
+                "countryOfResidence": "US"
+              },
+              "creditorAccount": {
+                "identification": {
+                  "other": {
+                    "identification": "987654321012",
+                    "schemeName": {
+                      "code": "BBAN"
+                    }
+                  }
+                },
+                "type": {
+                  "code": "CACC"
+                },
+                "currency": "USD"
+              },
+              "purpose": {
+                "code": "SUPP"
+              },
+              "remittanceInformation": {
+                "unstructured": [
+                  "Invoice 2026-00417 dated 2026-10-15"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "supplementaryData": [
+        {
+          "placeAndName": "$.businessDocument.customerCreditTransferInitiation.groupHeader",
+          "envelope": {
+            "schema": "urn:fis:ep:supplement:pain.001.001.11:msg:universal:1",
+            "messageSupplement": {
+              "channel": "PayX Wire II",
+              "channelType": "GTWY"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
