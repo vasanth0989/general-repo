@@ -1,7 +1,38 @@
-Hosting and analysis are separate. GitHub Pages hosts the application’s static files—the HTML, styles and JavaScript from the dist folder. The browser downloads these files to run the application. Selecting a local delivery folder does not publish that folder or add its contents to GitHub.
+Hi Randy,
 
-In the implementation reviewed, the browser reads the selected files locally. Parsing, customer/payee mapping, duplicate detection and dashboard calculations run in browser memory on the user’s computer. The analysis workflow has no file-upload or remote-processing API calls.
+Thank you. To help you line up the right SMEs, here is where we are on the Code Connect side and the points we need clarity on. The exact responses are quoted so your team can trace them.
 
-The analysis.worker-….js entry that appears after clicking Perform analysis is the application loading its analysis engine. A Web Worker runs this code in the background on the same computer so the dashboard remains responsive. Loading that script is a download of application code; it is not, by itself, an upload of customer data.
+What is working
 
-The hosted application does make network requests to retrieve its code and styles, so “no internet communication” would not be an accurate description. The distinction is that the reviewed implementation processes the selected customer files locally rather than transmitting them for analysis.
+Our Code Connect application (WireII-DFS-OPF-Convergence, organisation Discover_Bank) is approved and subscribed to EP-POM-CCTI v1 in Sandbox.
+We obtain tokens with the client credentials grant against the UAT token endpoint and the gateway accepts them. An expired or missing token correctly returns 401 (fault 900901, Invalid Credentials).
+Our requests reach the UAT gateway at the correct resource, POST https://api-gw-uat.fisglobal.com/api/enterprise-payments/pom/v1/customer-credit-transfer-initiations, with the uuid, idempotency-key and organization-id (8203) headers. A wrong path returns 404 "No matching resource found for given API Request", so routing to the resource is fine.
+Where we are blocked
+
+The gateway cannot reach the OPF backend most of the time. The typical response is HTTP 500:
+
+{"fault":{"code":"101503","type":"Status report","message":"Runtime Error","description":"Error connecting to the back end"}}
+
+Sometimes it comes back within half a second, sometimes only after about 18 seconds. With a minimal body we have also seen an HTTP 504 Gateway Timeout page from the edge after about 20 seconds. Occasionally the call does reach OPF (see point 2), so the backend exists but is not reliably reachable from the gateway. Is the Sandbox backend for organisation 8203 expected to be continuously available, and is there a window we should test in?
+
+When OPF does answer, every request is rejected on the business application header. The response is HTTP 400:
+
+{"details":[{"code":"UE-0102","subcode":"AH.NA","cause":"opfpayment/validation:100089020","message":"Not allowed business application header field","fields":["$.businessApplicationHeader.characterSet"]}]}
+
+We get exactly this with characterSet absent, set to "UTF-8" or "Basic Latin", with the header reduced to its five required fields, with the supplementary data removed, and with the payload reduced to the required elements only. We are sending the "from" and "to" identifiers from the published example (paymentSystemId POMBULK_CT and XCT, coreBankIdentifier custCBI_01, endPointName EC_CUSTCBI_01_POM_INCOMING). Which identifiers should Discover use for its OPF endpoint, and is characterSet expected on that endpoint?
+
+The Code Connect API Console cannot call this API from the browser. The gateway's preflight response does not list the API's own headers, so Chrome blocks the request before it is sent:
+
+Access to fetch at 'https://api-gw-uat.fisglobal.com/api/enterprise-payments/pom/v1/customer-credit-transfer-initiations' from origin 'https://codeconnect.fisglobal.com' has been blocked by CORS policy: Request header field idempotency-key is not allowed by Access-Control-Allow-Headers in preflight response.
+
+We work around it with Postman and a Java client, but adding uuid, idempotency-key, organization-id and environment to the allowed headers would make the console usable.
+
+Reference for your team: [date and time ET] [HTTP status] [gateway trace id from the response headers], one line per attempt.
+
+Two more items for the same call:
+
+Which organization-id and environment header values apply to Discover in Sandbox and later in production.
+Could you share one request JSON that is known to succeed against Discover's Sandbox endpoint (a 202 for EP-POM-CCTI v1), with the business application header and any supplementary data OPF expects? Everything we have built from the published Swagger and its UC01 example passes the schema but is rejected as above, so a working sample would let us compare and close the gap quickly.
+With those answers we can complete the connectivity test and move on to message content.
+
+Thanks, Vasanth
