@@ -1,5 +1,6 @@
 {
   "businessApplicationHeader": {
+    "characterSet": "UTF-8",
     "from": {
       "organisationIdentification": {
         "identification": {
@@ -50,7 +51,7 @@
         }
       }
     },
-    "businessMessageIdentifier": "DFSC2026102313560501",
+    "businessMessageIdentifier": "DFSC20261023140400A1",
     "messageDefinitionIdentifier": "pain.001.001.11",
     "marketPractice": {
       "registry": "FIS EP Universal Execution",
@@ -61,7 +62,7 @@
   "businessDocument": {
     "customerCreditTransferInitiation": {
       "groupHeader": {
-        "messageIdentification": "DFSC2026102313560501",
+        "messageIdentification": "DFSC20261023140400A1",
         "creationDateTime": "2026-10-23T13:56:05.000Z",
         "numberOfTransactions": "1",
         "controlSum": "48750.00",
@@ -87,7 +88,7 @@
       },
       "paymentInformation": [
         {
-          "paymentInformationIdentification": "DFSC2026102313560501",
+          "paymentInformationIdentification": "DFSC20261023140400A1",
           "paymentMethod": "TRF",
           "batchBooking": false,
           "numberOfTransactions": "1",
@@ -172,9 +173,9 @@
           "creditTransferTransactionInformation": [
             {
               "paymentIdentification": {
-                "instructionIdentification": "DFSC2026102313560501",
+                "instructionIdentification": "DFSC20261023140400A1",
                 "endToEndIdentification": "PLG-AP-2026-10-0931",
-                "UETR": "699756b7-886a-4a70-8180-3e60e68dfd3e"
+                "UETR": "0524eff6-477f-4bff-804d-09402f5201c9"
               },
               "amount": {
                 "instructedAmount": {
