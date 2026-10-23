@@ -1,15 +1,24 @@
 {
   "businessApplicationHeader": {
     "from": {
-      "financialInstitutionIdentification": {
-        "financialInstitutionIdentification": {
-          "clearingSystemMemberIdentification": {
-            "clearingSystemIdentification": {
-              "code": "USABA"
-            },
-            "memberIdentification": "031100649"
-          },
-          "name": "Discover Bank"
+      "organisationIdentification": {
+        "identification": {
+          "organisationIdentification": {
+            "other": [
+              {
+                "identification": "POMBULK_CT",
+                "schemeName": {
+                  "proprietary": "paymentSystemId"
+                }
+              },
+              {
+                "identification": "custCBI_01",
+                "schemeName": {
+                  "proprietary": "coreBankIdentifier"
+                }
+              }
+            ]
+          }
         }
       }
     },
@@ -41,7 +50,7 @@
         }
       }
     },
-    "businessMessageIdentifier": "DFSC20261023140400D1",
+    "businessMessageIdentifier": "DFSC20261023141110E1",
     "messageDefinitionIdentifier": "pain.001.001.11",
     "marketPractice": {
       "registry": "FIS EP Universal Execution",
@@ -52,7 +61,7 @@
   "businessDocument": {
     "customerCreditTransferInitiation": {
       "groupHeader": {
-        "messageIdentification": "DFSC20261023140400D1",
+        "messageIdentification": "DFSC20261023141110E1",
         "creationDateTime": "2026-10-23T13:56:05.000Z",
         "numberOfTransactions": "1",
         "controlSum": "48750.00",
@@ -78,7 +87,7 @@
       },
       "paymentInformation": [
         {
-          "paymentInformationIdentification": "DFSC20261023140400D1",
+          "paymentInformationIdentification": "DFSC20261023141110E1",
           "paymentMethod": "TRF",
           "batchBooking": false,
           "numberOfTransactions": "1",
@@ -163,9 +172,9 @@
           "creditTransferTransactionInformation": [
             {
               "paymentIdentification": {
-                "instructionIdentification": "DFSC20261023140400D1",
+                "instructionIdentification": "DFSC20261023141110E1",
                 "endToEndIdentification": "PLG-AP-2026-10-0931",
-                "UETR": "43d62fd8-a37a-44e0-8304-caa57e68b276"
+                "UETR": "a265aa69-e746-4726-9d4b-d1b6d4aa4542"
               },
               "amount": {
                 "instructedAmount": {
@@ -260,40 +269,6 @@
               }
             }
           ]
-        }
-      ],
-      "supplementaryData": [
-        {
-          "placeAndName": "$.businessDocument.customerCreditTransferInitiation.groupHeader",
-          "envelope": {
-            "schema": "urn:fis:ep:supplement:pain.001.001.11:msg:universal:1",
-            "messageSupplement": {
-              "channel": "PAYX",
-              "channelType": "CORP",
-              "firstMessageTraceIdentification": "c490a612-80a7-4964-a87a-6b1b0d53029c"
-            }
-          }
-        },
-        {
-          "placeAndName": "$.businessDocument.customerCreditTransferInitiation.paymentInformation[0]",
-          "envelope": {
-            "schema": "urn:fis:ep:supplement:pain.001.001.11:pmtinf:universal:1",
-            "paymentInformationSupplement": {
-              "forceFunds": false,
-              "originatingBankTransactionCode": {
-                "domain": {
-                  "code": "PMNT",
-                  "family": {
-                    "code": "ICDT",
-                    "subFamilyCode": "DMCT"
-                  }
-                }
-              },
-              "originatingRequestedValueDate": {
-                "date": "2026-10-23"
-              }
-            }
-          }
         }
       ]
     }
