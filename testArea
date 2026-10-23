@@ -50,7 +50,7 @@
         }
       }
     },
-    "businessMessageIdentifier": "DFSC20261023141110E1",
+    "businessMessageIdentifier": "DFSC2026102313560501",
     "messageDefinitionIdentifier": "pain.001.001.11",
     "marketPractice": {
       "registry": "FIS EP Universal Execution",
@@ -61,7 +61,7 @@
   "businessDocument": {
     "customerCreditTransferInitiation": {
       "groupHeader": {
-        "messageIdentification": "DFSC20261023141110E1",
+        "messageIdentification": "DFSC2026102313560501",
         "creationDateTime": "2026-10-23T13:56:05.000Z",
         "numberOfTransactions": "1",
         "controlSum": "48750.00",
@@ -87,7 +87,7 @@
       },
       "paymentInformation": [
         {
-          "paymentInformationIdentification": "DFSC20261023141110E1",
+          "paymentInformationIdentification": "DFSC2026102313560501",
           "paymentMethod": "TRF",
           "batchBooking": false,
           "numberOfTransactions": "1",
@@ -172,9 +172,9 @@
           "creditTransferTransactionInformation": [
             {
               "paymentIdentification": {
-                "instructionIdentification": "DFSC20261023141110E1",
+                "instructionIdentification": "DFSC2026102313560501",
                 "endToEndIdentification": "PLG-AP-2026-10-0931",
-                "UETR": "a265aa69-e746-4726-9d4b-d1b6d4aa4542"
+                "UETR": "699756b7-886a-4a70-8180-3e60e68dfd3e"
               },
               "amount": {
                 "instructedAmount": {
@@ -269,6 +269,40 @@
               }
             }
           ]
+        }
+      ],
+      "supplementaryData": [
+        {
+          "placeAndName": "$.businessDocument.customerCreditTransferInitiation.groupHeader",
+          "envelope": {
+            "schema": "urn:fis:ep:supplement:pain.001.001.11:msg:universal:1",
+            "messageSupplement": {
+              "channel": "PAYX",
+              "channelType": "CORP",
+              "firstMessageTraceIdentification": "c490a612-80a7-4964-a87a-6b1b0d53029c"
+            }
+          }
+        },
+        {
+          "placeAndName": "$.businessDocument.customerCreditTransferInitiation.paymentInformation[0]",
+          "envelope": {
+            "schema": "urn:fis:ep:supplement:pain.001.001.11:pmtinf:universal:1",
+            "paymentInformationSupplement": {
+              "forceFunds": false,
+              "originatingBankTransactionCode": {
+                "domain": {
+                  "code": "PMNT",
+                  "family": {
+                    "code": "ICDT",
+                    "subFamilyCode": "DMCT"
+                  }
+                }
+              },
+              "originatingRequestedValueDate": {
+                "date": "2026-10-23"
+              }
+            }
+          }
         }
       ]
     }
